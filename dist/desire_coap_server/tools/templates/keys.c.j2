@@ -1,0 +1,54 @@
+#include <inttypes.h>
+
+#include "edhoc/keys.h"
+#include "xfa.h"
+
+XFA_USE_CONST(cred_db_entry_t, cred_db);
+
+{%- if auth_key %}
+/**
+ * @brief   CBOR-encoded authentication key
+ */
+static const uint8_t {{ name }}_auth_key_cbor[] = {
+{{ auth_key }}
+};
+{%- endif %}
+
+/**
+ * @brief   CBOR-encoded RPK
+ */
+static const uint8_t {{ name }}_rpk_cbor[] = {
+{{ rpk }}
+};
+
+/**
+ * @brief   CBOR-encoded RPK ID
+ */
+static const uint8_t {{ name }}_rpk_id_cbor[] = {
+{{ rpk_id }}
+};
+
+/**
+ * @brief   RPK ID Value
+ */
+static const uint8_t {{ name }}_rpk_id_value[] = {
+{{ rpk_id_value }}
+};
+
+XFA_CONST(cred_db, 0) cred_db_entry_t _{{ name }}_db_entry = {
+{%- if auth_key %}
+    .auth_key = {{ name }}_auth_key_cbor,
+    .auth_key_len = sizeof({{ name }}_auth_key_cbor),
+{%- else %}
+    .auth_key = NULL,
+    .auth_key_len = 0,
+{%- endif %}
+    .id = {{ name }}_rpk_id_cbor,
+    .id_len = sizeof({{ name }}_rpk_id_cbor),
+    .id_value = {{ name }}_rpk_id_value,
+    .id_value_len = sizeof({{ name }}_rpk_id_value),
+    .cred = {{ name }}_rpk_cbor,
+    .cred_len = sizeof({{ name }}_rpk_cbor),
+};
+
+/** @} */
