@@ -65,3 +65,8 @@ class Nodes():
     def update_contact(self, rtl: List[Union[str, bytes]]):
         for node in self.nodes:
             node.update_contact(rtl)
+    
+    def resolve_contacts(self, rtl: List[Union[str, bytes]]) -> List[str]:
+        '''Resolves the uids of contacts in the RTL'''
+
+        return [node.uid for node in self.nodes if node.is_contact(rtl)]

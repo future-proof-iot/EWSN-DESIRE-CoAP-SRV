@@ -1,11 +1,12 @@
 """Node test module."""
 
+import dataclasses
 import pytest
 import random
 
 from common.node import Node, Nodes
 from common import TEST_NODE_UID_0
-from desire_coap.payloads import ErtlPayload
+from desire_coap.payloads import EncounterData, ErtlPayload, PetElement
 
 
 @pytest.fixture(autouse=True)
@@ -102,3 +103,29 @@ def test_nodes_update_contact():
 
 
 
+def test_resolve_contacts():
+    """Test resolve contacts from encounter pets"""
+
+    def _mirror_pet(pet:PetElement):
+        ed = pet.pet
+        _ed = dataclasses.replace(ed) #  clone
+        _ed.rtl = ed.etl
+        _ed.etl = ed.rtl
+        return PetElement(_ed)
+
+    # populate three nodes:
+    _nodes = [Node(f'DWM000{i}') for i in range(3)]
+    # generate three random pets
+    ertl = ErtlPayload.rand(3)
+    # encouter matrix
+    # node 0 has ecountered nodes 1 and 2
+    # node 1 has encountered nodes 0 and 2
+    # node 2 has encoutered nodes 0 and 1
+    _nodes[0].add_ertl(ErtlPayload(ertl.epoch, [ertl.pets[0], ertl.pets[1]]))
+    _nodes[1].add_ertl(ErtlPayload(ertl.epoch, [_mirror_pet(ertl.pets[0]), ertl.pets[2]]))
+    _nodes[2].add_ertl(ErtlPayload(ertl.epoch, [_mirror_pet(ertl.pets[1]), _mirror_pet(ertl.pets[2])]))
+    nodes = Nodes(_nodes)
+    
+    assert nodes.resolve_contacts(_nodes[0].get_rtl()) == [_nodes[1].uid, _nodes[2].uid]
+    assert nodes.resolve_contacts(_nodes[1].get_rtl()) == [_nodes[0].uid, _nodes[2].uid]
+    assert nodes.resolve_contacts(_nodes[2].get_rtl()) == [_nodes[0].uid, _nodes[1].uid]
