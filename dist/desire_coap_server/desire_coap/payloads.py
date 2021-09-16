@@ -115,9 +115,9 @@ class ErtlPayload:
                 return self.pets == other.pets
         return False
 
-    def to_json_str(self):
+    def to_json_str(self, indent=None):
         json_dict = asdict(self)
-        return json.dumps(json_dict, cls=Base64Encoder)
+        return json.dumps(json_dict, cls=Base64Encoder, indent=indent)
 
     @staticmethod
     def from_json_str(json_string: str):
