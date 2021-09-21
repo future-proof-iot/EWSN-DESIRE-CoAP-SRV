@@ -2,22 +2,10 @@ from dataclasses import dataclass, field
 from typing import Any, IO
 import os
 from urllib.parse import urlparse
-import datetime
+import json
 
-from .common import EventLogger
-
-@dataclass
-class FileEvent:
-    timestamp: int
-    endpoint: str
-    data: str
-
-    def to_str(self) -> str:
-        return f"timestamp={self.timestamp}, endpoint='{self.endpoint}', data='{self.data}'"
-
-    @staticmethod
-    def from_str(value: str):
-        return eval(f'FileEvent({value})')
+from .common import DesireEvent, EventLogger
+from desire_coap.payloads import Base64Encoder
 
 
 @dataclass
@@ -39,9 +27,12 @@ class FileEventLogger(EventLogger):
 
     def disconnect(self) -> None:
         self.handle.close()
+    
+    def is_connected(self) -> bool:
+        return not self.handle.closed
 
-    def log(self, endpoint: str, data: str) -> None:
-        seconds_since_epoch = datetime.datetime.now().timestamp()
-        self.handle.write(FileEvent(seconds_since_epoch,
-                          endpoint, data).to_str()+'\n')
+    def log(self, data: DesireEvent) -> None:
+        # write event in json format
+        line = json.dumps(data.to_influx_dict(),cls=Base64Encoder)
+        self.handle.write(line + '\n')
 
