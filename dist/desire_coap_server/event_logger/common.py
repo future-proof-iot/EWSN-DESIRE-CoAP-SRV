@@ -1,10 +1,12 @@
 from __future__ import annotations
-from abc import ABC, ABCMeta, abstractmethod, abstractclassmethod
+from abc import ABC, ABCMeta, abstractmethod
 import abc
 from dataclasses import dataclass, field
-from desire_coap.payloads import EncounterData, ErtlPayload, PetElement
-from typing import Any, Dict, List
+from desire_coap.payloads import EncounterData, ErtlPayload, PetElement, Base64Encoder
+from typing import Any, Dict, List, Union
 import time
+import json
+from influxdb_client.client.write import point as influx_point
 
 @dataclass
 class DesireEvent(metaclass=ABCMeta):
@@ -19,6 +21,26 @@ class DesireEvent(metaclass=ABCMeta):
         data['fields'] = {}
         data['time'] = self.timestamp
         return data
+
+    def to_influx_line_protocol(self)-> List[str]:
+        lines = []
+        points = self.to_influx_dict()
+        # convert bytearrays to base64 trick
+        points = json.loads(json.dumps(points, cls=Base64Encoder))
+        assert isinstance(points, list) or isinstance(points, dict)
+        if isinstance(points, list):
+            for p in points:
+                point = influx_point.Point.from_dict(p)
+                lines.append(point.to_line_protocol())
+            # process a list of measurments (batch)
+        else:
+            point = influx_point.Point.from_dict(points)
+            lines.append(point.to_line_protocol())
+        
+        return lines
+
+    def to_json_str(self) -> str:
+        return json.dumps(self.to_influx_dict(),cls=Base64Encoder)
 
     @abc.abstractclassmethod
     def from_influx_dict(cls, data: Dict) -> DesireEvent:

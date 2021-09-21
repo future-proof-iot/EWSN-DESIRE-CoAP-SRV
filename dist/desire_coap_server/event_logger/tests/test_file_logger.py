@@ -78,7 +78,7 @@ def test_file_event_ertl():
         # delete log_file
         os.remove(flog.path)
 
-@pytest.mark.skip("WIP: Visual test only")
+#@pytest.mark.skip("WIP: Visual test only")
 def test_file_event_ertl_influx():
     try:
         flog = FileEventLogger('file:./log-ertl-tmp.influx', format='influx')

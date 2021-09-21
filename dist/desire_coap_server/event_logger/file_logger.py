@@ -5,11 +5,7 @@ import os
 from urllib.parse import urlparse
 import json
 
-from influxdb_client.client.write import point as influx_point
-
 from .common import DesireEvent, EventLogger
-from desire_coap.payloads import Base64Encoder
-
 
 @dataclass
 class FileEventLogger(EventLogger):
@@ -37,24 +33,12 @@ class FileEventLogger(EventLogger):
     def is_connected(self) -> bool:
         return not self.handle.closed
 
-    def log(self, data: DesireEvent, format='json') -> None:
+    def log(self, data: DesireEvent) -> None:
         # write event in json format
-        lines = []
         if self.format == 'influx':
-            points = data.to_influx_dict()
-            # convert bytearrays to base64 trick
-            points = json.loads(json.dumps(points, cls=Base64Encoder))
-            assert isinstance(points, list) or isinstance(points, dict)
-            if isinstance(points, list):
-                for p in points:
-                    point = influx_point.Point.from_dict(p)
-                    lines.append(point.to_line_protocol())
-                # process a list of measurments (batch)
-            else:
-                point = influx_point.Point.from_dict(points)
-                lines.append(point.to_line_protocol())
+            lines = data.to_influx_line_protocol()
         else:
-            lines.append(json.dumps(data.to_influx_dict(),cls=Base64Encoder))
+            lines = [data.to_json_str()]
         
         for line in lines:
             self.handle.write(line + '\n')
