@@ -195,7 +195,7 @@ def main(uid_list: List[str], host: str, port: int):
     )
     LOGGER.info(f"{http_event_logger}")
     coap_server = DesireCoapServer(
-        host, port, rq_handler=DummyRqHandler(nodes), nodes=nodes
+        host, port, rq_handler=LoggingHandler(nodes, http_event_logger), nodes=nodes
     )
     # blocking run in this thread
     coap_server.run()

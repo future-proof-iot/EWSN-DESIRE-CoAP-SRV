@@ -95,7 +95,7 @@ def test_file_event_ertl_influx():
         flog.disconnect()
         assert not flog.is_connected()
 
-        handle = open(flog.path, 'r')
+        handle = open(flog.path, "r")
         line = handle.readline()
         print(f"lines={line}")
         logged_ert_evt = ErtlEvent.from_influx_dict(json.loads(line))
