@@ -1,0 +1,22 @@
+version: "3.8"
+services:
+  # TODO: coap server service
+
+  # Agent for collecting data
+  telegraf:
+    image: telegraf:1.20.0
+    container_name: telegraf
+    #depends_on:
+    #  - coapsrv  # TODO depends on coap server servicves
+    restart: always
+    tty: true
+    ports:
+      - 8080:8080
+    volumes:
+      - ./volumes/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./volumes/telegraf/metrics.out:/tmp/telegraf/metrics.out
+    
+
+  
+  # Dashboard
+  #grafana:
