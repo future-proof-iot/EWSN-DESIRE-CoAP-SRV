@@ -41,7 +41,7 @@ PROV_NODES?=DWE549 DWDB44 DWFF6E
 
 launch_coap_server:
 	@echo "Laucnhining coap server with nodes = ${PROV_NODES} Press Ctrl+C to exit"
-	PYTHONPATH=${COAP_SRV_PATH} python ${COAP_SRV_PATH}/desire_coap_srv.py --host=127.0.0.1 --node-uid ${PROV_NODES}
+	PYTHONPATH=${COAP_SRV_PATH} python ${COAP_SRV_PATH}/desire_coap_srv.py --host=127.0.0.1 --node-uid ${PROV_NODES} --event-log http://localhost:8080/telegraf
 
 clean_launch: reset_db up launch_coap_server
 	@echo 'You will never see this message'

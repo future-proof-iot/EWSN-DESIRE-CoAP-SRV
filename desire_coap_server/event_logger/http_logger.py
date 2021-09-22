@@ -15,7 +15,7 @@ class HttpEventLogger(EventLogger):
     def __post_init__(self):
         # check uri file
         res = urlparse(self.uri)
-        assert res.scheme == "http", "Invalid uri, must be a file"
+        assert res.scheme == "http", "Invalid uri, must be http"
         assert res.path == "/telegraf"
         ## check output format
         assert (

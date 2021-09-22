@@ -44,3 +44,4 @@ class FileEventLogger(EventLogger):
 
         for line in lines:
             self.handle.write(line + "\n")
+            self.handle.flush()

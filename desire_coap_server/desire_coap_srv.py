@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+from urllib.parse import urlparse
 import argparse
 import logging
 import copy
@@ -9,6 +11,9 @@ from desire_coap.resources import DesireCoapServer, RqHandlerBase
 
 from common import TEST_NODE_UID_0, TEST_NODE_UID_1
 from common.node import Node, Nodes
+from event_logger.file_logger import FileEventLogger
+from event_logger.http_logger import HttpEventLogger
+from event_logger.common import EventLogger
 
 logging.basicConfig(level=logging.INFO, format="%(name)14s - %(message)s")
 LOG_LEVELS = ("debug", "info", "warning", "error", "fatal", "critical")
@@ -26,6 +31,44 @@ parser.add_argument("--port", type=int, default=5683, help="The CoAP PORT")
 parser.add_argument("--host", type=str, default=None, help="The CoAP host interface")
 parser.add_argument(
     "--loglevel", choices=LOG_LEVELS, default="info", help="Python logger log level"
+)
+
+
+class UriArgType(object):
+    VALID_SCHEMES = ("file", "http")
+
+    def __call__(self, uri):
+        res = urlparse(uri)
+        if not res.scheme == "file" and not res.scheme == "http":
+            raise argparse.ArgumentTypeError(
+                f"Invalid uri schem {res.scheme}, expected in {self.VALID_SCHEMES}"
+            )
+
+        if res.scheme == "http":
+            if not res.path == "/telegraf":
+                raise argparse.ArgumentTypeError(f"invalid uri path {res.path}")
+
+        return uri
+
+    @classmethod
+    def create_event_logger(cls, uri: str, format: str) -> EventLogger:
+        assert cls()(uri) == uri, "invalid uri {uri}"
+        res = urlparse(uri)
+        if res.scheme == "file":
+            return FileEventLogger(uri, format)
+        elif res.scheme == "http":
+            return HttpEventLogger(uri, format)
+        else:
+            raise SystemError(
+                f"This is not supposed to happen: invalid scheme {res.scheme} in {uri}"
+            )
+
+
+parser.add_argument(
+    "--event-log",
+    type=UriArgType(),
+    default=f"file:{os.getcwd()}/desire_coap_srv.log",
+    help="Endpoint uri for logging events [file|http]:<uri>",
 )
 
 
@@ -181,7 +224,7 @@ class LoggingHandler(DummyRqHandler):
 # logging setup
 
 
-def main(uid_list: List[str], host: str, port: int):
+def main(uid_list: List[str], host: str, port: int, event_logger: EventLogger):
     # Create node list with default test node
     nodes_list = (
         [Node(uid) for uid in uid_list]
@@ -189,13 +232,15 @@ def main(uid_list: List[str], host: str, port: int):
         else [Node(TEST_NODE_UID_0), Node(TEST_NODE_UID_1)]
     )
     nodes = Nodes(nodes_list)
+
     # Desire coap server instance , the rq_handler is the engine for handling post/get requests
-    http_event_logger = HttpEventLogger(
-        uri="http://localhost:8080/telegraf", format="influx"
-    )
-    LOGGER.info(f"{http_event_logger}")
+    event_logger.connect()
+    LOGGER.info(f"event_logger={event_logger}")
+    import atexit
+
+    atexit.register(event_logger.disconnect)
     coap_server = DesireCoapServer(
-        host, port, rq_handler=LoggingHandler(nodes, http_event_logger), nodes=nodes
+        host, port, rq_handler=LoggingHandler(nodes, event_logger), nodes=nodes
     )
     # blocking run in this thread
     coap_server.run()
@@ -208,4 +253,11 @@ if __name__ == "__main__":
         loglevel = logging.getLevelName(args.loglevel.upper())
         LOGGER.setLevel(loglevel)
 
-    main(args.node_uid, host=args.host, port=args.port)
+    main(
+        args.node_uid,
+        host=args.host,
+        port=args.port,
+        event_logger=UriArgType.create_event_logger(
+            uri=args.event_log, format="influx"
+        ),
+    )
