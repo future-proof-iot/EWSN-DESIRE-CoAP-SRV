@@ -1,5 +1,6 @@
 """Class for managed node."""
 
+from __future__ import annotations
 from desire_coap.payloads import ErtlPayload
 from typing import List, Union
 
@@ -45,9 +46,11 @@ class Node():
     def is_contact(self, rtl: List[Union[str, bytes]]) -> bool:
         return any(token in rtl for token in self.get_etl())
 
-    def update_contact(self, rtl: List[Union[str, bytes]]):
-        if self.is_contact(rtl):
+    def update_contact(self, rtl: List[Union[str, bytes]]) -> bool:
+        is_contact = self.is_contact(rtl)
+        if is_contact:
             self.exposed = True
+        return is_contact
 
 
 class Nodes():
@@ -62,9 +65,12 @@ class Nodes():
                 return node
         return None
 
-    def update_contact(self, rtl: List[Union[str, bytes]]):
+    def update_contact(self, rtl: List[Union[str, bytes]]) -> List[Nodes]:
+        contacts = []
         for node in self.nodes:
-            node.update_contact(rtl)
+            if node.update_contact(rtl):
+                contacts.append(node)
+        return contacts
     
     def resolve_contacts(self, rtl: List[Union[str, bytes]]) -> List[str]:
         '''Resolves the uids of contacts in the RTL'''

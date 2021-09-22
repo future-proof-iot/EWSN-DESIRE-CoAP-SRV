@@ -1,9 +1,7 @@
 from dataclasses import dataclass, field
-from json import encoder
 from typing import Any, IO
 import os
 from urllib.parse import urlparse
-import json
 
 from .common import DesireEvent, EventLogger
 

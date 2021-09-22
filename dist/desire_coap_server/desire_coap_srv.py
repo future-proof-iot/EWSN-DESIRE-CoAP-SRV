@@ -3,13 +3,14 @@ import argparse
 import logging
 import json
 import copy
-from typing import List
+from typing import List, Union
 
 from desire_coap.resources import ErtlPayload
 from desire_coap.resources import DesireCoapServer, RqHandlerBase
 
 from common import TEST_NODE_UID_0, TEST_NODE_UID_1
 from common.node import Node, Nodes
+
 
 logging.basicConfig(level=logging.INFO, format='%(name)14s - %(message)s')
 LOG_LEVELS = ('debug', 'info', 'warning', 'error', 'fatal', 'critical')
@@ -56,19 +57,48 @@ class DummyRqHandler(RqHandlerBase):
             f"[exposure_status]: uid={node.uid} is_exposed=({node.exposed})")
         return node.exposed
 
-    def set_infected(self, node: Node, status: bool) -> None:
+    def set_infected(self, node: Node, status: bool) -> Union[None,List[Nodes]]:
+        contacts = None
         LOGGER.info(
             f"[infected_declaration]: uid={node.uid} is_infected=({status})")
         node.infected = status
         if status:
-            self.nodes.update_contact(node.get_rtl())
-        return None
+            contacts = self.nodes.update_contact(node.get_rtl())
+        return contacts
 
     def set_exposed(self, node: Node, status: bool) -> None:
         LOGGER.debug(
             f'[{self.__class__.__name__}] set_exposed: uid={node.uid} exposed={status}')
         node.exposed = status
         return None
+
+# request handler that logs to  http agent (telegraf)
+from event_logger.common import ErtlEvent, EventLogger, ExposureEvent, InfectionEvent
+from event_logger.http_logger import HttpEventLogger
+
+class LoggingHandler(DummyRqHandler):
+    def __init__(self, nodes: Nodes, event_logger: EventLogger):
+        super().__init__(nodes)
+        self.event_logger = event_logger
+    
+    def update_ertl(self, node: Node, ertl: ErtlPayload):
+        super().update_ertl(node, ertl)
+        event = ErtlEvent(node_id=node.uid, payload=ertl)
+        self.event_logger.log(event)
+    
+    def set_infected(self, node: Node, status: bool) -> None:
+        contacts = super().set_infected(node, status)
+        event = InfectionEvent(node_id=node.uid, payload=status)
+        self.event_logger.log(event)
+        for contact in contacts:
+            event = ExposureEvent(node_id=contact.uid, payload=True)
+            self.event_logger.log(event)
+    
+    def set_exposed(self, node: Node, status: bool) -> None:
+        super().set_exposed(node, status)
+        event = ExposureEvent(node_id=node.uid, payload=status)
+        self.event_logger.log(event)
+
 
 
 # logging setup
@@ -81,9 +111,11 @@ def main(uid_list: List[str], port: int, bind: bool):
         for uid in uid_list:
             nodes.nodes.append(Node(uid))
     # Desire coap server instance , the rq_handler is the engine for handling post/get requests
+    http_event_logger = HttpEventLogger(uri='http://localhost:8080/telegraf', format='influx')
+    print(http_event_logger)
     coap_server = DesireCoapServer(host="localhost" if bind else None,
                                    port=port if bind else None,
-                                   rq_handler=DummyRqHandler(nodes), nodes=nodes)
+                                   rq_handler=LoggingHandler(nodes, http_event_logger), nodes=nodes)
     # blocking run in this thread
     coap_server.run()
 
