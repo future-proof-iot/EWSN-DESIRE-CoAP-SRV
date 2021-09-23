@@ -23,7 +23,9 @@ parser.add_argument("--node-uid", type=str, nargs='+',
 parser.add_argument("--port", type=int, default=5683, help="The CoAP PORT")
 parser.add_argument('--loglevel', choices=LOG_LEVELS, default='info',
                     help='Python logger log level')
-
+# by default include test nodes                    
+parser.add_argument('--test', default=True, action='store_true')
+parser.add_argument('--no-test', dest='test', action='store_false')
 
 class DummyRqHandler(RqHandlerBase):
 
@@ -80,6 +82,11 @@ class LoggingHandler(DummyRqHandler):
     def __init__(self, nodes: Nodes, event_logger: EventLogger):
         super().__init__(nodes)
         self.event_logger = event_logger
+        # assume all nodes are healty
+        for node in nodes.nodes:
+
+            self.event_logger.log(InfectionEvent(node_id=node.uid, payload=False))
+            self.event_logger.log(ExposureEvent(node_id=node.uid, payload=False))
     
     def update_ertl(self, node: Node, ertl: ErtlPayload):
         super().update_ertl(node, ertl)
@@ -90,9 +97,10 @@ class LoggingHandler(DummyRqHandler):
         contacts = super().set_infected(node, status)
         event = InfectionEvent(node_id=node.uid, payload=status)
         self.event_logger.log(event)
-        for contact in contacts:
-            event = ExposureEvent(node_id=contact.uid, payload=True)
-            self.event_logger.log(event)
+        if contacts:
+            for contact in contacts:
+                event = ExposureEvent(node_id=contact.uid, payload=True)
+                self.event_logger.log(event)
     
     def set_exposed(self, node: Node, status: bool) -> None:
         super().set_exposed(node, status)
@@ -104,9 +112,9 @@ class LoggingHandler(DummyRqHandler):
 # logging setup
 
 
-def main(uid_list: List[str], port: int, bind: bool):
+def main(uid_list: List[str], port: int, bind: bool, include_test_nodes=True):
     # Create node list with default test node
-    nodes = Nodes([Node(TEST_NODE_UID_0), Node(TEST_NODE_UID_1)])
+    nodes = Nodes([Node(TEST_NODE_UID_0), Node(TEST_NODE_UID_1)]) if include_test_nodes else Nodes([])
     if uid_list:
         for uid in uid_list:
             nodes.nodes.append(Node(uid))
@@ -127,4 +135,4 @@ if __name__ == "__main__":
         loglevel = logging.getLevelName(args.loglevel.upper())
         LOGGER.setLevel(loglevel)
 
-    main(args.node_uid, args.port, bind=False)
+    main(args.node_uid, args.port, bind=False, include_test_nodes=args.test)
