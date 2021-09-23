@@ -33,7 +33,7 @@ class DummyRqHandler(RqHandlerBase):
         LOGGER.debug(f'[{self.__class__.__name__}] update_ertl: uid={node.uid}, ertl = {ertl}, json = \n{ertl.to_json_str()}')
         etl = copy.deepcopy(ertl)
         for pet in etl.pets:
-            pet.pet.rtl = ""
+            pet.pet.etl = ""
         etl_str = etl.to_json_str(indent=2)
         LOGGER.info(f'[pet_offloading]: received rtl from uid={node.uid}\n{etl_str}')
         node.add_ertl(ertl)
