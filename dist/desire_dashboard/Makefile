@@ -1,7 +1,6 @@
 # Handy makefile as reminder of docker/docker-compose ops
 
-#DOCKER_COMPOSE?=UUID=$(shell id -u) GID=$(shell id -g) docker-compose
-DOCKER_COMPOSE=docker-compose
+DOCKER_COMPOSE?=UUID=$(shell id -u) GID=$(shell id -g) docker-compose
 
 build:
 	@echo 'Building and pulling images'
