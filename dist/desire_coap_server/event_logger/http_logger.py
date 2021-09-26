@@ -37,9 +37,12 @@ class HttpEventLogger(EventLogger):
             lines = [data.to_json_str()]
         
         for line in lines:
-            status_code = self._http_post_line_protocol(line)
-            if status_code != 204:
-                warnings.warn(f"Http post failed, returned {status_code}({http_codes[status_code]}) instead of 204", RuntimeWarning)
+            try: 
+                status_code = self._http_post_line_protocol(line)
+                if status_code != 204:
+                    warnings.warn(f"Http post failed, returned {status_code}({http_codes[status_code]}) instead of 204", RuntimeWarning)
+            except Exception as e:
+                warnings.warn(f"Http post crash: {e}")
     
     def _http_post_line_protocol(self, line:str) -> int:
         if self.format == 'influx':

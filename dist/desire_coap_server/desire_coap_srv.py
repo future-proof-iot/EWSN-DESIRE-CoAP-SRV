@@ -75,7 +75,7 @@ class DummyRqHandler(RqHandlerBase):
         return None
 
 # request handler that logs to  http agent (telegraf)
-from event_logger.common import ErtlEvent, EventLogger, ExposureEvent, InfectionEvent
+from event_logger.common import ErtlEvent, EventLogger, ExposureEvent, InfectionEvent, StatusEvent
 from event_logger.http_logger import HttpEventLogger
 
 class LoggingHandler(DummyRqHandler):
@@ -84,28 +84,26 @@ class LoggingHandler(DummyRqHandler):
         self.event_logger = event_logger
         # assume all nodes are healty
         for node in nodes.nodes:
-
             self.event_logger.log(InfectionEvent(node_id=node.uid, payload=False))
             self.event_logger.log(ExposureEvent(node_id=node.uid, payload=False))
+            self.event_logger.log(StatusEvent(node_id=node.uid, payload=StatusEvent.OK))
     
     def update_ertl(self, node: Node, ertl: ErtlPayload):
         super().update_ertl(node, ertl)
-        event = ErtlEvent(node_id=node.uid, payload=ertl)
-        self.event_logger.log(event)
+        self.event_logger.log(ErtlEvent(node_id=node.uid, payload=ertl))
     
     def set_infected(self, node: Node, status: bool) -> None:
         contacts = super().set_infected(node, status)
-        event = InfectionEvent(node_id=node.uid, payload=status)
-        self.event_logger.log(event)
+        self.event_logger.log(InfectionEvent(node_id=node.uid, payload=status))
+        self.event_logger.log(StatusEvent(node_id=node.uid, payload=StatusEvent.INFECTED if status else StatusEvent.OK))
         if contacts:
             for contact in contacts:
-                event = ExposureEvent(node_id=contact.uid, payload=True)
-                self.event_logger.log(event)
+                self.event_logger.log(ExposureEvent(node_id=contact.uid, payload=True))
+                self.event_logger.log(StatusEvent(node_id=contact.uid, payload=StatusEvent.EXPOSED))
     
     def set_exposed(self, node: Node, status: bool) -> None:
         super().set_exposed(node, status)
-        event = ExposureEvent(node_id=node.uid, payload=status)
-        self.event_logger.log(event)
+        self.event_logger.log(ExposureEvent(node_id=node.uid, payload=status))        
 
 
 

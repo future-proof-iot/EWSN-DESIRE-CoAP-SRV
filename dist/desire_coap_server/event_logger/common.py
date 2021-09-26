@@ -3,7 +3,7 @@ from abc import ABC, ABCMeta, abstractmethod
 import abc
 from dataclasses import dataclass, field
 from desire_coap.payloads import EncounterData, ErtlPayload, PetElement, Base64Encoder
-from typing import Any, Dict, List, Union
+from typing import Any, ClassVar, Dict, List, Union
 import time
 import json
 from influxdb_client.client.write import point as influx_point
@@ -195,3 +195,48 @@ class ErtlEvent(DesireEvent):
         ertl.timestamp = _timestamp
 
         return ertl
+
+@dataclass
+class StatusEvent(DesireEvent):
+    payload: str
+    OK : ClassVar[str] = 'ok'
+    INFECTED: ClassVar[str] = 'infected'
+    EXPOSED: ClassVar[str] = 'exposed'
+
+    __STATUS_VALUES : ClassVar[List[str]] = [OK, INFECTED, EXPOSED]
+
+    def __post_init__(self):
+        assert type(self.payload) == str, f'Invalid payload type {type(self.payload)}'
+        assert self.payload  in StatusEvent.__STATUS_VALUES, f'invalid status payload {self.payload}'
+        self.timestamp = super().timestamp_ns()
+
+    @property
+    def ok(self) -> bool:
+        return self.payload == 'ok'
+    
+    @property
+    def infected(self) -> bool:
+        return self.payload == 'infected'
+    
+    @property
+    def exposed(self) -> bool:
+        return self.payload == 'exposed'
+
+    def to_influx_dict(self) -> Dict:
+        data = super().to_influx_dict()
+        data['measurement'] = 'status'
+        data['fields']['value'] = self.payload
+
+        return data
+
+    @classmethod
+    def from_influx_dict(cls, data: Dict) -> StatusEvent:
+        assert data['measurement'] == 'status', f"invalid measurement name {data['measurement']}"
+        _node_id = data['tags']['node_id']
+        _value = data['fields']['value']
+        _timestamp = data['time']
+
+        obj = StatusEvent(node_id=_node_id, payload=_value)
+        obj.timestamp = _timestamp
+
+        return obj
