@@ -29,3 +29,7 @@ config:
 clean: down
 	@echo 'Pruning up'
 	docker system prune
+
+reset_db: clean
+	@echo 'reset influxdb'
+	rm -rf volumes/influxdb/config/* volumes/influxdb/data/*
