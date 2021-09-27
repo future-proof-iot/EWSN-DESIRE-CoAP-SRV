@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from desire_coap.payloads import ErtlPayload
-from typing import List, Union
+from typing import List, Union, Dict
 
 from security.crypto import CryptoCtx
 from common import SERVER_CTX_ID
@@ -42,6 +42,13 @@ class Node():
         for ertl in self.ertl:
             rtl.extend([pet.pet.rtl for pet in ertl.pets])
         return rtl
+    
+    def get_encounter_data(self, etl:Union[str, bytes], rtl:Union[str, bytes]):# -> EncounterData:
+        for _ertl in self.ertl:
+            ed = _ertl.get_encounter_data(etl, rtl)
+            if ed:
+                return ed
+        return None
 
     def is_contact(self, rtl: List[Union[str, bytes]]) -> bool:
         return any(token in rtl for token in self.get_etl())
@@ -74,5 +81,13 @@ class Nodes():
     
     def resolve_contacts(self, rtl: List[Union[str, bytes]]) -> List[str]:
         '''Resolves the uids of contacts in the RTL'''
-
         return [node.uid for node in self.nodes if node.is_contact(rtl)]
+
+    def resolve_contacts_dict(self, rtl: List[Union[str, bytes]]) -> Dict:
+        res = dict()
+        for token in rtl:
+            contact_id = self.resolve_contacts([token])
+            assert len(contact_id) <=1, 'PET match is grater than 2, impossible !?'
+            if len(contact_id) == 1:
+                res[token]=contact_id[0]
+        return res

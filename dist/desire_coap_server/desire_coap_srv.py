@@ -40,7 +40,8 @@ class DummyRqHandler(RqHandlerBase):
         etl_str = etl.to_json_str(indent=2)
         LOGGER.info(f'[pet_offloading]: received rtl from uid={node.uid}\n{etl_str}')
         node.add_ertl(ertl)
-
+        # gotcha: FIXME infection is declared prior to encounter declaration !!
+        
     def get_ertl(self, node: Node) -> ErtlPayload:
         # NOTE: this will never be called
         ertl = None
@@ -75,7 +76,7 @@ class DummyRqHandler(RqHandlerBase):
         return None
 
 # request handler that logs to  http agent (telegraf)
-from event_logger.common import ErtlEvent, EventLogger, ExposureEvent, InfectionEvent, StatusEvent
+from event_logger.common import ErtlEvent, EventLogger, ExposureEvent, InfectionEvent, StatusEvent, ResolvedEncouterEvent, ResolvedEncouterData
 from event_logger.http_logger import HttpEventLogger
 
 class LoggingHandler(DummyRqHandler):
@@ -91,6 +92,40 @@ class LoggingHandler(DummyRqHandler):
     def update_ertl(self, node: Node, ertl: ErtlPayload):
         super().update_ertl(node, ertl)
         self.event_logger.log(ErtlEvent(node_id=node.uid, payload=ertl))
+        rtl_list = ertl.rtl
+        etl_list = ertl.etl
+        # for each rtl, if resolved (i.e in dict) log for this node and mirror
+        contact_uids = self.nodes.resolve_contacts(ertl.rtl)
+        contact_dict = self.nodes.resolve_contacts_dict(ertl.rtl)
+        LOGGER.info(f'[pet_offloading]resolved contacts = {contact_uids}')
+        LOGGER.info(f'[pet_offloading]resolved contacts map = {contact_dict}')
+        for rtl,etl in zip(rtl_list, etl_list):
+            if rtl in contact_dict:
+                cid = contact_dict[rtl]
+                ed = node.get_encounter_data(etl, rtl)
+                # log resolved encounter event for this node node and symmetric for contact node
+                evt = ResolvedEncouterEvent(node_id=node.uid, payload=ResolvedEncouterData(epoch=ertl.epoch, pet=ed, contact_id=cid))
+                self.event_logger.log(evt)
+                print('>>> ',evt)
+                # log resolved encounter event for the contact node
+                contact_node = self.nodes.get_node(uid=cid)
+                ed = contact_node.get_encounter_data(etl=rtl, rtl=etl) # mirror
+                # Gotcha: FIXME the epoch value is not saved, the event should log the epoch in the clock of the contact node
+                evt = ResolvedEncouterEvent(node_id=cid, payload=ResolvedEncouterData(epoch=ertl.epoch, pet=ed, contact_id=node.uid))
+                print('>>> [mirror]',evt)
+                self.event_logger.log(evt)
+            else:
+                print('>>> No match')
+        return
+        for uid in contact_uids:
+            contact = self.nodes.get_node(uid)
+            if contact:
+                # log resolved encounter event for this node node and symmetric for contact node
+                ResolvedEncouterEvent(node_id=node.uid, payload=ResolvedEncouterData(epoch=ertl.epoch, pet=ed, contact_id=uid))
+                pass
+            else:
+                LOGGER.warning(f'Panic: unknown contact uid {uid}')
+
     
     def set_infected(self, node: Node, status: bool) -> None:
         contacts = super().set_infected(node, status)
@@ -118,7 +153,7 @@ def main(uid_list: List[str], port: int, bind: bool, include_test_nodes=True):
             nodes.nodes.append(Node(uid))
     # Desire coap server instance , the rq_handler is the engine for handling post/get requests
     http_event_logger = HttpEventLogger(uri='http://localhost:8080/telegraf', format='influx')
-    print(http_event_logger)
+    LOGGER.info(f'{http_event_logger}')
     coap_server = DesireCoapServer(host="localhost" if bind else None,
                                    port=port if bind else None,
                                    rq_handler=LoggingHandler(nodes, http_event_logger), nodes=nodes)

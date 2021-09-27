@@ -240,3 +240,56 @@ class StatusEvent(DesireEvent):
         obj.timestamp = _timestamp
 
         return obj
+
+@dataclass
+class ResolvedEncouterData:
+    epoch: int
+    pet: EncounterData
+    #node_id: str
+    contact_id:str
+    
+@dataclass
+class ResolvedEncouterEvent(DesireEvent):
+    payload : ResolvedEncouterData
+    def __post_init__(self):
+        assert type(self.payload) == ResolvedEncouterData, f'invalid type {type(self.payload)}'
+        self.timestamp = time.time_ns()
+
+    @property
+    def epoch(self) -> int:
+        return self.payload.epoch
+
+    def to_influx_dict(self) -> Dict:
+        data = super(self.__class__, self).to_influx_dict()
+        data['measurement'] = 'rpets'
+        ed = self.payload.pet
+        data['tags']['etl'] = ed.etl
+        data['tags']['rtl'] = ed.rtl
+        data['tags']['contact_id'] = self.payload.contact_id
+        data['fields']['epoch'] = self.payload.epoch
+        data['fields']['exposure'] = ed.exposure
+        data['fields']['avg_d_cm'] = ed.avg_d_cm
+        data['fields']['req_count'] = ed.req_count
+        return data
+
+
+    @classmethod
+    def from_influx_dict(cls, data: Dict) -> ResolvedEncouterEvent:
+        assert data['measurement'] == 'rpets', f'Invalid measurement type in {datum}'
+        # tags
+        _node_id = data['tags']['node_id']
+        _contact_id = data['tags']['contact_id']
+        _etl = data['tags']['etl']
+        _rtl = data['tags']['rtl']
+        # fields
+        _epoch = data['fields']['epoch']
+        _exposure = data['fields']['exposure']
+        _req_count = data['fields']['req_count']
+        _avg_d_cm = data['fields']['avg_d_cm']
+        # time
+        _timestamp = data['time']
+        # wrap up
+        _ed = EncounterData(etl=_etl, rtl=_rtl, exposure=_exposure, req_count=_req_count, avg_d_cm=_avg_d_cm)
+        evt = ResolvedEncouterEvent(node_id=_node_id, payload=ResolvedEncouterData(epoch=_epoch, pet=_ed, contact_id=_contact_id))
+        evt.timestamp = _timestamp
+        return evt
