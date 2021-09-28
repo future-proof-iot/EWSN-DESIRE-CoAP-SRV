@@ -54,10 +54,10 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=pepper
       - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=500ms
-      #- GF_PATHS_PROVISIONING=conf/provisioning
+      - GF_PATHS_PROVISIONING=conf/provisioning
     ports:
       - 3000:3000
     volumes:
       - ./volumes/grafana/data:/var/lib/grafana
-      #- ./volumes/grafana/config/provisioning/:/usr/share/grafana/conf/provisioning
+      - ./volumes/grafana/config/provisioning/:/usr/share/grafana/conf/provisioning
 
