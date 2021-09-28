@@ -45,3 +45,6 @@ launch_coap_server:
 
 clean_launch: reset_db up launch_coap_server
 	@echo 'You will never see this message'
+
+gen_keys:
+	PYTHONPATH=${COAP_SRV_PATH} python ${COAP_SRV_PATH}/tools/edhoc_generate_keys.py
