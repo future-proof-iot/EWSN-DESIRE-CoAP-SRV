@@ -5,6 +5,7 @@ DOCKER_COMPOSE?=UUID=$(shell id -u) GID=$(shell id -g) docker-compose
 build:
 	@echo 'Building and pulling images'
 	${DOCKER_COMPOSE} ${DOCKER_WORKDIR} build
+	${DOCKER_COMPOSE} pull
 
 up:
 	@echo 'Powering up the containers'
