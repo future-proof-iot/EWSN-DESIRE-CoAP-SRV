@@ -106,27 +106,13 @@ class LoggingHandler(DummyRqHandler):
                 # log resolved encounter event for this node node and symmetric for contact node
                 evt = ResolvedEncouterEvent(node_id=node.uid, payload=ResolvedEncouterData(epoch=ertl.epoch, pet=ed, contact_id=cid))
                 self.event_logger.log(evt)
-                print('>>> ',evt)
                 # log resolved encounter event for the contact node
                 contact_node = self.nodes.get_node(uid=cid)
                 ed = contact_node.get_encounter_data(etl=rtl, rtl=etl) # mirror
                 # Gotcha: FIXME the epoch value is not saved, the event should log the epoch in the clock of the contact node
                 evt = ResolvedEncouterEvent(node_id=cid, payload=ResolvedEncouterData(epoch=ertl.epoch, pet=ed, contact_id=node.uid))
-                print('>>> [mirror]',evt)
                 self.event_logger.log(evt)
-            else:
-                print('>>> No match')
-        return
-        for uid in contact_uids:
-            contact = self.nodes.get_node(uid)
-            if contact:
-                # log resolved encounter event for this node node and symmetric for contact node
-                ResolvedEncouterEvent(node_id=node.uid, payload=ResolvedEncouterData(epoch=ertl.epoch, pet=ed, contact_id=uid))
-                pass
-            else:
-                LOGGER.warning(f'Panic: unknown contact uid {uid}')
 
-    
     def set_infected(self, node: Node, status: bool) -> None:
         contacts = super().set_infected(node, status)
         self.event_logger.log(InfectionEvent(node_id=node.uid, payload=status))
@@ -138,9 +124,14 @@ class LoggingHandler(DummyRqHandler):
     
     def set_exposed(self, node: Node, status: bool) -> None:
         super().set_exposed(node, status)
-        self.event_logger.log(ExposureEvent(node_id=node.uid, payload=status))        
+        self.event_logger.log(ExposureEvent(node_id=node.uid, payload=status))
 
-
+    def is_exposed(self, node: Node) -> bool:
+        exposed  = super().is_exposed(node)
+        # log node status: assuming at every epoch the node queries esr: this serves as a keep alive :)
+        evt_payload = StatusEvent.EXPOSED if exposed else StatusEvent.INFECTED if node.infected else StatusEvent.OK
+        self.event_logger.log(StatusEvent(node_id=node.uid, payload=evt_payload))
+        return exposed
 
 # logging setup
 
