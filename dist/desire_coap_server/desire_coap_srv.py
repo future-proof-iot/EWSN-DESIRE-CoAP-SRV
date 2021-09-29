@@ -79,16 +79,20 @@ class DummyRqHandler(RqHandlerBase):
 from event_logger.common import ErtlEvent, EventLogger, ExposureEvent, InfectionEvent, StatusEvent, ResolvedEncouterEvent, ResolvedEncouterData
 from event_logger.http_logger import HttpEventLogger
 
+
 class LoggingHandler(DummyRqHandler):
     def __init__(self, nodes: Nodes, event_logger: EventLogger):
         super().__init__(nodes)
         self.event_logger = event_logger
-        # assume all nodes are healty
+        def on_enrollment_cb(uid:str):
+            self.event_logger.log(InfectionEvent(node_id=uid, payload=False))
+            self.event_logger.log(ExposureEvent(node_id=uid, payload=False))
+            self.event_logger.log(StatusEvent(node_id=uid, payload=StatusEvent.OK))
+        self.nodes.on_enrollment = on_enrollment_cb
+        # assume all nodes are healthy
         for node in nodes.nodes:
-            self.event_logger.log(InfectionEvent(node_id=node.uid, payload=False))
-            self.event_logger.log(ExposureEvent(node_id=node.uid, payload=False))
-            self.event_logger.log(StatusEvent(node_id=node.uid, payload=StatusEvent.OK))
-    
+            on_enrollment_cb(node.uid)
+
     def update_ertl(self, node: Node, ertl: ErtlPayload):
         super().update_ertl(node, ertl)
         self.event_logger.log(ErtlEvent(node_id=node.uid, payload=ertl))

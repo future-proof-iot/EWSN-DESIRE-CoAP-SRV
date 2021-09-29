@@ -102,6 +102,7 @@ class EdhocResource(resource.Resource):
                     logger.info(f"[enrollment]: EDHOC exporter salt:\n\t {salt_hex}")
                     node.ctx.generate_aes_ccm_keys(salt, secret)
                     logger.info(f"[enrollment]: enrolled device uid={node.uid}")
+                    self.nodes.notify_enrollment(node.uid)
             else:
                 logger.debug('ERROR Could not Find node')
 

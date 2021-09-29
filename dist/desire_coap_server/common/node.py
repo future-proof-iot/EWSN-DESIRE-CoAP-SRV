@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from desire_coap.payloads import ErtlPayload
-from typing import List, Union, Dict
+from typing import Callable, List, Union, Dict
 
 from security.crypto import CryptoCtx
 from common import SERVER_CTX_ID
@@ -63,8 +63,9 @@ class Node():
 class Nodes():
     """List of nodes"""
 
-    def __init__(self, nodes: List[Node]):
+    def __init__(self, nodes: List[Node], on_enrollment:Callable[[str], None]=None):
         self.nodes = nodes
+        self.on_enrollment = on_enrollment
 
     def get_node(self, uid:str):
         for node in self.nodes:
@@ -91,3 +92,7 @@ class Nodes():
             if len(contact_id) == 1:
                 res[token]=contact_id[0]
         return res
+    
+    def notify_enrollement(self, node_id:str):
+        if self.on_enrollment:
+            self.on_enrollment(node_id)
