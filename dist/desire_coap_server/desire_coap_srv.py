@@ -79,7 +79,6 @@ class DummyRqHandler(RqHandlerBase):
 from event_logger.common import ErtlEvent, EventLogger, ExposureEvent, InfectionEvent, StatusEvent, ResolvedEncouterEvent, ResolvedEncouterData
 from event_logger.http_logger import HttpEventLogger
 
-
 class LoggingHandler(DummyRqHandler):
     def __init__(self, nodes: Nodes, event_logger: EventLogger):
         super().__init__(nodes)
