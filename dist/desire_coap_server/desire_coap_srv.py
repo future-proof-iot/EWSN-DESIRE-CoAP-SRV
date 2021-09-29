@@ -85,6 +85,7 @@ class LoggingHandler(DummyRqHandler):
             self.event_logger.log(InfectionEvent(node_id=uid, payload=False))
             self.event_logger.log(ExposureEvent(node_id=uid, payload=False))
             self.event_logger.log(StatusEvent(node_id=uid, payload=StatusEvent.OK))
+            self.nodes.reset_node(node_id=uid, reset_ertl=True)
         self.nodes.on_enrollment = on_enrollment_cb
         # assume all nodes are healthy
         for node in nodes.nodes:

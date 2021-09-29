@@ -17,6 +17,12 @@ class Node():
         self.infected = False
         self.exposed = False
         self.ertl: List[ErtlPayload] = list()
+    
+    def reset(self, reset_ertl=False):
+        self.infected = False
+        self.exposed = False
+        if reset_ertl:
+            self.ertl.clear()
 
     @property
     def ctx_id(self):
@@ -92,7 +98,12 @@ class Nodes():
             if len(contact_id) == 1:
                 res[token]=contact_id[0]
         return res
-    
+
+    def reset_node(self, node_id:str, reset_ertl=False):
+        node = self.get_node(uid=node_id)
+        if node:
+            node.reset(reset_ertl)
+            
     def notify_enrollment(self, node_id:str):
         if self.on_enrollment:
             self.on_enrollment(node_id)
