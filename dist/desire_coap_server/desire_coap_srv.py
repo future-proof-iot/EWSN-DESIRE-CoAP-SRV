@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import logging
-import json
 import copy
 from typing import List, Union
 
@@ -28,7 +27,6 @@ parser.add_argument('--test', default=True, action='store_true')
 parser.add_argument('--no-test', dest='test', action='store_false')
 
 class DummyRqHandler(RqHandlerBase):
-
     def __init__(self, nodes: Nodes):
         self.nodes = nodes
 

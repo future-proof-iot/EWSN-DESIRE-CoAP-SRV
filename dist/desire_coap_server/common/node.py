@@ -93,6 +93,6 @@ class Nodes():
                 res[token]=contact_id[0]
         return res
     
-    def notify_enrollement(self, node_id:str):
+    def notify_enrollment(self, node_id:str):
         if self.on_enrollment:
             self.on_enrollment(node_id)
