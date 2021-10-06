@@ -4,6 +4,6 @@ cbor2==5.4.0
 LinkHeader==0.4.3
 # edhoc relates requirements
 cryptography>=1.7.2
-# specifiy hash while https://github.com/openwsn-berkeley/py-edhoc/pull/26 is not in
-git+https://github.com/openwsn-berkeley/py-edhoc.git@31daaf756b7bc58559616eec05fdb9c47b182017#egg=edhoc
+# specifiy hash while https://github.com/openwsn-berkeley/py-edhoc/pull/27 is not in
+git+https://github.com/openwsn-berkeley/py-edhoc.git@0ffc0e4ceeb5ee23a956a7e7d87df4292a3a4ac3#egg=edhoc
 Jinja2==3.0.1
