@@ -15,13 +15,11 @@ from cose.keys.keyparam import KpKid
 
 from common import SERVER_CTX_ID, TEST_NODE_UID_0
 import edhoc_coap.initiator as initiator
-from security.edhoc_keys import (add_peer_cred,
-                                 rmv_peer_cred,
-                                 generate_ed25519_priv_key)
+from security.edhoc_keys import add_peer_cred, rmv_peer_cred, generate_ed25519_priv_key
 
 dirname = os.path.dirname(__file__)
-EDHOC_SERVER_PATH = os.path.join(dirname, '../../tools/edhoc_server.py')
-EDHOC_RESPONDER_EP = 'coap://localhost:5683'
+EDHOC_SERVER_PATH = os.path.join(dirname, "../../tools/edhoc_server.py")
+EDHOC_RESPONDER_EP = "coap://localhost:5683"
 
 
 @pytest.fixture
@@ -39,13 +37,13 @@ def event_loop():
 
 @pytest.fixture(scope="session", autouse=True)
 def responder(request):
-    cmd = ['python', EDHOC_SERVER_PATH]
+    cmd = ["python", EDHOC_SERVER_PATH]
     proc = subprocess.Popen(cmd)
     time.sleep(0.2)
     request.addfinalizer(proc.kill)
 
 
-async def _coap_resource(url, method=GET, payload=b''):
+async def _coap_resource(url, method=GET, payload=b""):
     protocol = await Context.create_client_context(loop=None)
     request = Message(code=method, payload=payload)
     request.set_request_uri(url)
@@ -53,7 +51,7 @@ async def _coap_resource(url, method=GET, payload=b''):
         response = await protocol.request(request).response
     except Exception as e:
         code = "Failed to fetch resource"
-        payload = '{0}'.format(e)
+        payload = "{0}".format(e)
     else:
         code = response.code
         payload = response.payload
@@ -74,50 +72,57 @@ def credentials():
     )
     rmv_peer_cred(TEST_NODE_UID_0.encode())
     add_peer_cred(rpk_bytes, TEST_NODE_UID_0.encode())
-    x = authcred.public_bytes(serialization.Encoding.Raw,
-                              serialization.PublicFormat.Raw)
-    authcred = OKPKey(crv=Ed25519, x=x, optional_params={
-                      KpKid: TEST_NODE_UID_0.encode()})
-    d = authkey.private_bytes(serialization.Encoding.Raw,
-                              serialization.PrivateFormat.Raw,
-                              serialization.NoEncryption())
-    x = authkey.public_key().public_bytes(serialization.Encoding.Raw,
-                                          serialization.PublicFormat.Raw)
-    authkey = OKPKey(crv=Ed25519, d=d, x=x, optional_params={
-                     KpKid: TEST_NODE_UID_0.encode()})
+    x = authcred.public_bytes(
+        serialization.Encoding.Raw, serialization.PublicFormat.Raw
+    )
+    authcred = OKPKey(
+        crv=Ed25519, x=x, optional_params={KpKid: TEST_NODE_UID_0.encode()}
+    )
+    d = authkey.private_bytes(
+        serialization.Encoding.Raw,
+        serialization.PrivateFormat.Raw,
+        serialization.NoEncryption(),
+    )
+    x = authkey.public_key().public_bytes(
+        serialization.Encoding.Raw, serialization.PublicFormat.Raw
+    )
+    authkey = OKPKey(
+        crv=Ed25519, d=d, x=x, optional_params={KpKid: TEST_NODE_UID_0.encode()}
+    )
     return authcred, authkey
 
 
 @pytest.mark.asyncio
 async def test_well_known(event_loop):
-    code, payload = await _coap_resource(
-        f'{EDHOC_RESPONDER_EP}/.well-known/core')
+    code, payload = await _coap_resource(f"{EDHOC_RESPONDER_EP}/.well-known/core")
     assert code == CONTENT
 
 
 @pytest.mark.asyncio
 async def test_well_known_edhoc_and_decode(event_loop):
     authcred, authkey = credentials()
-    salt, secret = await initiator.handshake('localhost', authcred, authkey)
+    salt, secret = await initiator.handshake("localhost", authcred, authkey)
     ctx = CryptoCtx(TEST_NODE_UID_0.encode(), SERVER_CTX_ID)
     ctx.generate_aes_ccm_keys(salt, secret)
     secret_msg = "A Secret Message"
     msg = ctx.encrypt_txt(secret_msg)
     code, payload = await _coap_resource(
-        f'{EDHOC_RESPONDER_EP}/{TEST_NODE_UID_0}/decode', method=POST,
-        payload=msg)
-    assert secret_msg == payload.decode('utf-8')
+        f"{EDHOC_RESPONDER_EP}/{TEST_NODE_UID_0}/decode", method=POST, payload=msg
+    )
+    assert secret_msg == payload.decode("utf-8")
 
 
 @pytest.mark.asyncio
 async def test_well_known_edhoc_and_encode(event_loop):
     authcred, authkey = credentials()
-    salt, secret = await initiator.handshake('localhost', authcred, authkey)
+    salt, secret = await initiator.handshake("localhost", authcred, authkey)
     ctx = CryptoCtx(TEST_NODE_UID_0.encode(), SERVER_CTX_ID)
     ctx.generate_aes_ccm_keys(salt, secret)
     plain_msg = "Plain Text"
     code, payload = await _coap_resource(
-        f'{EDHOC_RESPONDER_EP}/{TEST_NODE_UID_0}/encode', method=POST,
-        payload=plain_msg.encode('utf-8'))
+        f"{EDHOC_RESPONDER_EP}/{TEST_NODE_UID_0}/encode",
+        method=POST,
+        payload=plain_msg.encode("utf-8"),
+    )
     msg = ctx.decrypt_txt(payload)
     assert msg == plain_msg

@@ -22,21 +22,19 @@ from common.node import Node
 from common import SERVER_CTX_ID, TEST_NODE_UID_0, TEST_NODE_UID_1
 import edhoc_coap.initiator as initiator
 from security.crypto import CryptoCtx
-from security.edhoc_keys import (add_peer_cred,
-                                 rmv_peer_cred,
-                                 generate_ed25519_priv_key)
+from security.edhoc_keys import add_peer_cred, rmv_peer_cred, generate_ed25519_priv_key
 
 from desire_coap.payloads import ErtlPayload, InfectedPayload, EsrPayload
 
 dirname = os.path.dirname(__file__)
-STATIC_FILES_DIR = os.path.join(dirname, '../../static')
+STATIC_FILES_DIR = os.path.join(dirname, "../../static")
 DESIRE_SERVER_PORT = 5683
-DESIRE_SERVER_PATH = os.path.join(dirname, '../../desire_coap_srv.py')
-DESIRE_COAP_EP = f'coap://localhost:{DESIRE_SERVER_PORT}'
+DESIRE_SERVER_PATH = os.path.join(dirname, "../../desire_coap_srv.py")
+DESIRE_COAP_EP = f"coap://localhost:{DESIRE_SERVER_PORT}"
 
-TEST_NODE_INFECTED_EP = f'{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/infected'
-TEST_NODE_ESR_EP = f'{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/esr'
-TEST_NODE_ERTL_EP = f'{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/ertl'
+TEST_NODE_INFECTED_EP = f"{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/infected"
+TEST_NODE_ESR_EP = f"{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/esr"
+TEST_NODE_ERTL_EP = f"{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/ertl"
 
 CONTENT_FORMAT_TEXT = 0
 CONTENT_FORMAT_OCTET_STREAM = 42
@@ -45,15 +43,15 @@ CONTENT_FORMAT_CBOR = 60
 
 
 def infected_uri(uid):
-    return f'{DESIRE_COAP_EP}/{uid}/infected'
+    return f"{DESIRE_COAP_EP}/{uid}/infected"
 
 
 def esr_uri(uid):
-    return f'{DESIRE_COAP_EP}/{uid}/esr'
+    return f"{DESIRE_COAP_EP}/{uid}/esr"
 
 
 def ertl_uri(uid):
-    return f'{DESIRE_COAP_EP}/{uid}/ertl'
+    return f"{DESIRE_COAP_EP}/{uid}/ertl"
 
 
 @pytest.fixture
@@ -71,7 +69,7 @@ def event_loop():
 
 @pytest.fixture(autouse=True)
 def desire(request):
-    cmd = ['python', DESIRE_SERVER_PATH, f'--port={DESIRE_SERVER_PORT}']
+    cmd = ["python", DESIRE_SERVER_PATH, f"--port={DESIRE_SERVER_PORT}"]
     proc = subprocess.Popen(cmd)
     # TODO: this will depend on the system is my guess, and ports might
     # collide
@@ -84,16 +82,16 @@ def desire(request):
 async def nodeFactory(event_loop, desire):
     async def test_node(uid: str) -> Node:
         authcred, authkey = credentials(uid.encode())
-        salt, secret = await initiator.handshake('localhost', authcred, authkey)
+        salt, secret = await initiator.handshake("localhost", authcred, authkey)
         node = Node(uid)
-        node.ctx = CryptoCtx(uid.encode('utf-8'), SERVER_CTX_ID)
+        node.ctx = CryptoCtx(uid.encode("utf-8"), SERVER_CTX_ID)
         node.ctx.generate_aes_ccm_keys(salt, secret)
         return node
+
     yield test_node
 
 
-async def _coap_resource(url, method=GET, payload=b'',
-                         format=CONTENT_FORMAT_TEXT):
+async def _coap_resource(url, method=GET, payload=b"", format=CONTENT_FORMAT_TEXT):
     protocol = await Context.create_client_context(loop=None)
     request = Message(code=method, payload=payload)
     request.opt.content_format = format
@@ -102,7 +100,7 @@ async def _coap_resource(url, method=GET, payload=b'',
         response = await protocol.request(request).response
     except Exception as e:
         code = "Failed to fetch resource"
-        payload = '{0}'.format(e)
+        payload = "{0}".format(e)
     else:
         code = response.code
         payload = response.payload
@@ -123,23 +121,25 @@ def credentials(uid: ByteString):
     )
     rmv_peer_cred(uid)
     add_peer_cred(rpk_bytes, uid)
-    x = authcred.public_bytes(serialization.Encoding.Raw,
-                              serialization.PublicFormat.Raw)
-    authcred = OKPKey(crv=Ed25519, x=x, optional_params={
-                      KpKid: uid})
-    d = authkey.private_bytes(serialization.Encoding.Raw,
-                              serialization.PrivateFormat.Raw,
-                              serialization.NoEncryption())
-    x = authkey.public_key().public_bytes(serialization.Encoding.Raw,
-                                          serialization.PublicFormat.Raw)
-    authkey = OKPKey(crv=Ed25519, d=d, x=x, optional_params={
-                     KpKid: uid})
+    x = authcred.public_bytes(
+        serialization.Encoding.Raw, serialization.PublicFormat.Raw
+    )
+    authcred = OKPKey(crv=Ed25519, x=x, optional_params={KpKid: uid})
+    d = authkey.private_bytes(
+        serialization.Encoding.Raw,
+        serialization.PrivateFormat.Raw,
+        serialization.NoEncryption(),
+    )
+    x = authkey.public_key().public_bytes(
+        serialization.Encoding.Raw, serialization.PublicFormat.Raw
+    )
+    authkey = OKPKey(crv=Ed25519, d=d, x=x, optional_params={KpKid: uid})
     return authcred, authkey
 
 
 @pytest.mark.asyncio
 async def test_well_known(event_loop):
-    code, payload = await _coap_resource(f'{DESIRE_COAP_EP}/.well-known/core')
+    code, payload = await _coap_resource(f"{DESIRE_COAP_EP}/.well-known/core")
     assert code == CONTENT
 
 
@@ -147,19 +147,23 @@ async def test_well_known(event_loop):
 async def test_infected_JSON(event_loop, nodeFactory):
     testnode = await nodeFactory(TEST_NODE_UID_0)
     assert testnode.has_crypto_ctx()
-    code, payload = await _coap_resource(infected_uri(testnode.uid),
-                                         format=CONTENT_FORMAT_JSON)
+    code, payload = await _coap_resource(
+        infected_uri(testnode.uid), format=CONTENT_FORMAT_JSON
+    )
     infected = InfectedPayload.from_json_str(testnode.ctx.decrypt(payload))
     assert infected.infected == False
     infected.infected = True
     payload = testnode.ctx.encrypt(infected.to_json_str().encode())
-    code, payload = await _coap_resource(infected_uri(testnode.uid),
-                                         method=POST,
-                                         payload=payload,
-                                         format=CONTENT_FORMAT_JSON)
+    code, payload = await _coap_resource(
+        infected_uri(testnode.uid),
+        method=POST,
+        payload=payload,
+        format=CONTENT_FORMAT_JSON,
+    )
     assert code == CHANGED
-    code, payload = await _coap_resource(infected_uri(testnode.uid),
-                                         format=CONTENT_FORMAT_JSON)
+    code, payload = await _coap_resource(
+        infected_uri(testnode.uid), format=CONTENT_FORMAT_JSON
+    )
     infected = InfectedPayload.from_json_str(testnode.ctx.decrypt(payload))
     assert infected.infected == True
 
@@ -168,19 +172,23 @@ async def test_infected_JSON(event_loop, nodeFactory):
 async def test_infected_CBOR(event_loop, nodeFactory):
     testnode = await nodeFactory(TEST_NODE_UID_0)
     assert testnode.has_crypto_ctx()
-    code, payload = await _coap_resource(infected_uri(testnode.uid),
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        infected_uri(testnode.uid), format=CONTENT_FORMAT_CBOR
+    )
     infected = InfectedPayload.from_cbor_bytes(testnode.ctx.decrypt(payload))
     assert infected.infected == False
     infected.infected = True
     payload = testnode.ctx.encrypt(infected.to_cbor_bytes())
-    code, payload = await _coap_resource(infected_uri(testnode.uid),
-                                         method=POST,
-                                         payload=payload,
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        infected_uri(testnode.uid),
+        method=POST,
+        payload=payload,
+        format=CONTENT_FORMAT_CBOR,
+    )
     assert code == CHANGED
-    code, payload = await _coap_resource(infected_uri(testnode.uid),
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        infected_uri(testnode.uid), format=CONTENT_FORMAT_CBOR
+    )
     infected = InfectedPayload.from_cbor_bytes(testnode.ctx.decrypt(payload))
     assert infected.infected == True
 
@@ -189,19 +197,20 @@ async def test_infected_CBOR(event_loop, nodeFactory):
 async def test_esr_JSON(event_loop, nodeFactory):
     testnode = await nodeFactory(TEST_NODE_UID_0)
     assert testnode.has_crypto_ctx()
-    code, payload = await _coap_resource(esr_uri(testnode.uid),
-                                         format=CONTENT_FORMAT_JSON)
+    code, payload = await _coap_resource(
+        esr_uri(testnode.uid), format=CONTENT_FORMAT_JSON
+    )
     exposed = EsrPayload.from_json_str(testnode.ctx.decrypt(payload))
     assert exposed.contact == False
     exposed.contact = True
     payload = testnode.ctx.encrypt(exposed.to_json_str().encode())
-    code, payload = await _coap_resource(esr_uri(testnode.uid),
-                                         method=POST,
-                                         payload=payload,
-                                         format=CONTENT_FORMAT_JSON)
+    code, payload = await _coap_resource(
+        esr_uri(testnode.uid), method=POST, payload=payload, format=CONTENT_FORMAT_JSON
+    )
     assert code == CHANGED
-    code, payload = await _coap_resource(esr_uri(testnode.uid),
-                                         format=CONTENT_FORMAT_JSON)
+    code, payload = await _coap_resource(
+        esr_uri(testnode.uid), format=CONTENT_FORMAT_JSON
+    )
     exposed = EsrPayload.from_json_str(testnode.ctx.decrypt(payload))
     assert exposed.contact == True
 
@@ -210,19 +219,20 @@ async def test_esr_JSON(event_loop, nodeFactory):
 async def test_esr_CBOR(event_loop, nodeFactory):
     testnode = await nodeFactory(TEST_NODE_UID_0)
     assert testnode.has_crypto_ctx()
-    code, payload = await _coap_resource(esr_uri(testnode.uid),
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        esr_uri(testnode.uid), format=CONTENT_FORMAT_CBOR
+    )
     exposed = EsrPayload.from_cbor_bytes(testnode.ctx.decrypt(payload))
     assert exposed.contact == False
     exposed.contact = True
     payload = testnode.ctx.encrypt(exposed.to_cbor_bytes())
-    code, payload = await _coap_resource(esr_uri(testnode.uid),
-                                         method=POST,
-                                         payload=payload,
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        esr_uri(testnode.uid), method=POST, payload=payload, format=CONTENT_FORMAT_CBOR
+    )
     assert code == CHANGED
-    code, payload = await _coap_resource(esr_uri(testnode.uid),
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        esr_uri(testnode.uid), format=CONTENT_FORMAT_CBOR
+    )
     exposed = EsrPayload.from_cbor_bytes(testnode.ctx.decrypt(payload))
     assert exposed.contact == True
 
@@ -231,13 +241,12 @@ async def test_esr_CBOR(event_loop, nodeFactory):
 async def test_ertl_JSON(event_loop, nodeFactory):
     testnode = await nodeFactory(TEST_NODE_UID_0)
     assert testnode.has_crypto_ctx()
-    with open(f'{STATIC_FILES_DIR}/ertl.json') as json_file:
-        ertl = ErtlPayload.from_json_str(''.join(json_file.readlines()))
+    with open(f"{STATIC_FILES_DIR}/ertl.json") as json_file:
+        ertl = ErtlPayload.from_json_str("".join(json_file.readlines()))
     payload = testnode.ctx.encrypt(ertl.to_json_str().encode())
-    code, payload = await _coap_resource(ertl_uri(testnode.uid),
-                                         method=POST,
-                                         payload=payload,
-                                         format=CONTENT_FORMAT_JSON)
+    code, payload = await _coap_resource(
+        ertl_uri(testnode.uid), method=POST, payload=payload, format=CONTENT_FORMAT_JSON
+    )
     assert code == CHANGED
 
 
@@ -245,13 +254,12 @@ async def test_ertl_JSON(event_loop, nodeFactory):
 async def test_ertl_JSON(event_loop, nodeFactory):
     testnode = await nodeFactory(TEST_NODE_UID_0)
     assert testnode.has_crypto_ctx()
-    with open(f'{STATIC_FILES_DIR}/ertl.json') as json_file:
-        ertl = ErtlPayload.from_json_str(''.join(json_file.readlines()))
+    with open(f"{STATIC_FILES_DIR}/ertl.json") as json_file:
+        ertl = ErtlPayload.from_json_str("".join(json_file.readlines()))
     payload = testnode.ctx.encrypt(ertl.to_cbor_bytes())
-    code, payload = await _coap_resource(ertl_uri(testnode.uid),
-                                         method=POST,
-                                         payload=payload,
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        ertl_uri(testnode.uid), method=POST, payload=payload, format=CONTENT_FORMAT_CBOR
+    )
     assert code == CHANGED
 
 
@@ -266,32 +274,40 @@ async def test_infected_notification(event_loop, nodeFactory):
     ertl_to_infect.pets[0].pet.rtl = ertl_infected.pets[0].pet.etl
     # POST encounter data
     payload = node_infected.ctx.encrypt(ertl_infected.to_cbor_bytes())
-    code, payload = await _coap_resource(ertl_uri(node_infected.uid),
-                                         method=POST,
-                                         payload=payload,
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        ertl_uri(node_infected.uid),
+        method=POST,
+        payload=payload,
+        format=CONTENT_FORMAT_CBOR,
+    )
     assert code == CHANGED
     payload = node_to_infect.ctx.encrypt(ertl_to_infect.to_cbor_bytes())
-    code, payload = await _coap_resource(ertl_uri(node_to_infect.uid),
-                                         method=POST,
-                                         payload=payload,
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        ertl_uri(node_to_infect.uid),
+        method=POST,
+        payload=payload,
+        format=CONTENT_FORMAT_CBOR,
+    )
     assert code == CHANGED
     # node is not exposed yet
-    code, payload = await _coap_resource(esr_uri(node_to_infect.uid),
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        esr_uri(node_to_infect.uid), format=CONTENT_FORMAT_CBOR
+    )
     exposed = EsrPayload.from_cbor_bytes(node_to_infect.ctx.decrypt(payload))
     assert exposed.contact == False
     exposed.contact = True
     # declare node infection
     infected = InfectedPayload(True)
     payload = node_infected.ctx.encrypt(infected.to_cbor_bytes())
-    code, payload = await _coap_resource(infected_uri(node_infected.uid),
-                                         method=POST,
-                                         payload=payload,
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        infected_uri(node_infected.uid),
+        method=POST,
+        payload=payload,
+        format=CONTENT_FORMAT_CBOR,
+    )
     # node is now exposed
-    code, payload = await _coap_resource(esr_uri(node_to_infect.uid),
-                                         format=CONTENT_FORMAT_CBOR)
+    code, payload = await _coap_resource(
+        esr_uri(node_to_infect.uid), format=CONTENT_FORMAT_CBOR
+    )
     exposed = EsrPayload.from_cbor_bytes(node_to_infect.ctx.decrypt(payload))
     assert exposed.contact == True
