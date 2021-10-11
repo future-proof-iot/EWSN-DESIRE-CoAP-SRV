@@ -24,7 +24,7 @@ import edhoc_coap.initiator as initiator
 from security.crypto import CryptoCtx
 from security.edhoc_keys import add_peer_cred, rmv_peer_cred, generate_ed25519_priv_key
 
-from desire_coap.payloads import ErtlPayload, InfectedPayload, EsrPayload
+from desire_coap.payloads import ErtlPayload, InfectedPayload, EsrPayload, TimeOfDayPayload
 
 dirname = os.path.dirname(__file__)
 STATIC_FILES_DIR = os.path.join(dirname, "../../static")
@@ -52,6 +52,9 @@ def esr_uri(uid):
 
 def ertl_uri(uid):
     return f"{DESIRE_COAP_EP}/{uid}/ertl"
+
+def time_uri():
+    return f"{DESIRE_COAP_EP}/time"
 
 
 @pytest.fixture
@@ -311,3 +314,14 @@ async def test_infected_notification(event_loop, nodeFactory):
     )
     exposed = EsrPayload.from_cbor_bytes(node_to_infect.ctx.decrypt(payload))
     assert exposed.contact == True
+
+@pytest.mark.asyncio
+async def test_timeofday(event_loop):
+    cur_time = time.time_ns()
+    
+    code, payload = await _coap_resource(
+        time_uri(), format=CONTENT_FORMAT_CBOR
+    )
+    assert code == CONTENT
+    srv_time = TimeOfDayPayload.from_cbor_bytes(payload)    
+    assert abs(cur_time - srv_time.time)/1e6 < 20, 'Timestamp is 20 ms higher than expected'

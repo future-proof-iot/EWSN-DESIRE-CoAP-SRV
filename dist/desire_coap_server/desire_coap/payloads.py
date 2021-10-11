@@ -1,3 +1,5 @@
+from __future__ import annotations
+import time
 from typing import List, Union
 from dataclasses import dataclass, asdict, field
 from cbor2.types import CBORTag
@@ -224,6 +226,42 @@ class InfectedPayload:
 
         return cbor2.loads(cbor_bytes, tag_hook=_tag_hook)
 
+@dataclass
+class TimeOfDayPayload:
+    time: int # ns since the unix epoch
+
+    def __eq__(self, other):
+        if isinstance(other, TimeOfDayPayload):
+            return self.time == other.time
+        return False
+
+    def to_json_str(self) -> str:
+        json_dict = asdict(self)
+        return json.dumps(json_dict)
+
+    def to_cbor_bytes(self) -> bytes:
+        def _default_encoder(encoder, value):
+            encoder.encode(cbor2.CBORTag(0xCAFB, [value.time]))
+
+        return cbor2.dumps(self, default=_default_encoder)
+    
+    @classmethod
+    def create_now(cls) -> TimeOfDayPayload:
+        return TimeOfDayPayload(time=time.time_ns())
+
+    @staticmethod
+    def from_json_str(json_string: str) -> TimeOfDayPayload:
+        json_dict = json.loads(json_string)
+        return from_dict(data_class=TimeOfDayPayload, data=json_dict)
+
+    @staticmethod
+    def from_cbor_bytes(cbor_bytes: bytes) -> TimeOfDayPayload:
+        def _tag_hook(decoder, tag, shareable_index=None):
+            if tag.tag != 0xCAFB:
+                return tag
+            return TimeOfDayPayload(time=tag.value[0])
+
+        return cbor2.loads(cbor_bytes, tag_hook=_tag_hook)
 
 def load_json_dump_cbor(cls, json_filename: str, gen_cbor_file=True):
     def hex_dump(data: bytes) -> str:

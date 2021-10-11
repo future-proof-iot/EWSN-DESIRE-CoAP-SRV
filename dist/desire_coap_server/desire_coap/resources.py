@@ -10,7 +10,7 @@ import aiocoap
 from typing import List
 from dataclasses import dataclass, field
 
-from desire_coap.payloads import ErtlPayload, InfectedPayload, EsrPayload
+from desire_coap.payloads import ErtlPayload, InfectedPayload, EsrPayload, TimeOfDayPayload
 
 from security.edhoc_keys import get_edhoc_keys
 from edhoc_coap.responder import EdhocResource
@@ -46,6 +46,34 @@ class RqHandlerBase(ABC):
 
 
 # Coap resources
+class TimeOfDayResource(resource.Resource):
+    def __init__(self):
+        super().__init__()
+
+    async def render_get(self, request):
+        rsp = aiocoap.Message(mtype=request.mtype)
+        content_format = request.opt.content_format
+        try:
+            time_payload = TimeOfDayPayload.create_now()
+            if content_format == aiocoap.numbers.media_types_rev['application/json']:
+                payload = time_payload.to_json_str().encode()
+                rsp = aiocoap.Message(mtype=request.mtype, payload=payload)
+                rsp.opt.content_format = content_format
+            elif content_format == aiocoap.numbers.media_types_rev['application/cbor']:
+                payload = time_payload.to_cbor_bytes()
+                rsp = aiocoap.Message(mtype=request.mtype, payload=payload)
+                rsp.opt.content_format = content_format
+            else:
+                # unsupported payload format
+                rsp = aiocoap.Message(
+                    mtype=request.mtype, code=aiocoap.numbers.codes.Code.UNSUPPORTED_CONTENT_FORMAT)
+        except Exception as e:
+            print(e)
+            rsp = aiocoap.Message(
+                mtype=request.mtype, code=aiocoap.numbers.codes.Code.INTERNAL_SERVER_ERROR)
+
+        return rsp
+
 class NodeResource(resource.Resource):
     def __init__(self, node: Node, handler: RqHandlerBase):
         super().__init__()
@@ -274,6 +302,7 @@ class DesireCoapServer:
                 node=node, handler=self.rq_handler))
             self.__coap_root.add_resource([node.uid, 'esr'], EsrResource(
                 node=node, handler=self.rq_handler))
+        self.__coap_root.add_resource(['time'], TimeOfDayResource())
 
     def run(self):
         if not self.host or not self.port:
