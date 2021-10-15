@@ -31,7 +31,7 @@ black:
     - mkdir ./black
     - black . --check
     - BLACK_STATUS=$?
-    - anybadge --label=pipeline --color red  --value=$BLACK_STATUS --file=black/black.svg 1=green
+    - anybadge --label=pipeline --color red  --value=$BLACK_STATUS --file=./black/black.svg 1=green
     - echo "Black status is $BLACK_STATUS"
   artifacts:
     paths:
