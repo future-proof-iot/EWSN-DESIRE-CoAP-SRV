@@ -23,6 +23,7 @@ pylint:
 
 black:
   stage: formatting
+  needs: []
   before_script:
     - cd desire_coap_server
     - pip install black anybadge
