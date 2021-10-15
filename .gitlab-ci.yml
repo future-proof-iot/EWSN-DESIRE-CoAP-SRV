@@ -2,12 +2,13 @@ default:
   image: python:3.8.12
 
 stages:
-  - build
-  #- test
+  - static-analysis
+  - formatting
+  - test
   #- doc
 
-lint:
-  stage: build
+pylint:
+  stage: static-analysis
   before_script:
     - pip install pylint pylint-exit anybadge
   script:
@@ -19,3 +20,30 @@ lint:
   artifacts:
     paths:
       - ./pylint/
+
+black:
+  stage: formatting
+  before_script:
+    - cd desire_coap_server
+    - pip install black
+  script:
+    - black . --check
+    - BLACK_STATUS=$?
+    - anybadge --label=pipeline --color red  --value=$BLACK_STATUS --file=black/black.svg 1=green
+    - echo "Black status is $BLACK_STATUS"
+  artifacts:
+    paths:
+      - ./black/
+
+
+#pytest:
+#  stage: test
+#  before_script:
+#    - cd desire_coap_server
+#    - pip install -r requirements.txt
+#    - pip install -r test_requirements.txt
+#    - pip install anybadge
+#  script:
+#    - PYTHONPATH=. python -m pytest -x
+#    - 
+
