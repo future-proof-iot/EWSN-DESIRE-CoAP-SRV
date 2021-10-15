@@ -1,4 +1,4 @@
-default: python:3.8
+image: python:3.8
 
 stages:
   - build
