@@ -25,11 +25,10 @@ black:
   stage: formatting
   needs: []
   before_script:
-    - cd desire_coap_server
     - pip install black anybadge
   script:
     - mkdir ./black
-    - black . --check
+    - black desire_coap_server --check
     - BLACK_STATUS=$?
     - anybadge --label=pipeline --color red  --value=$BLACK_STATUS --file=./black/black.svg 1=green
     - echo "Black status is $BLACK_STATUS"
