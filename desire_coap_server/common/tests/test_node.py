@@ -19,8 +19,8 @@ def testnode():
 def test_node_add_rmv_ertl(testnode):
     """Tests adding and removing rtl data to a Node"""
     assert not testnode.ertl
-    with open('static/ertl.json') as json_file:
-        ertl = ErtlPayload.from_json_str(''.join(json_file.readlines()))
+    with open("static/ertl.json") as json_file:
+        ertl = ErtlPayload.from_json_str("".join(json_file.readlines()))
     testnode.add_ertl(ertl)
     assert testnode.ertl
     testnode.rmv_ertl(ertl)
@@ -102,19 +102,18 @@ def test_nodes_update_contact():
         assert node.exposed
 
 
-
 def test_resolve_contacts():
     """Test resolve contacts from encounter pets"""
 
-    def _mirror_pet(pet:PetElement):
+    def _mirror_pet(pet: PetElement):
         ed = pet.pet
-        _ed = dataclasses.replace(ed) #  clone
+        _ed = dataclasses.replace(ed)  #  clone
         _ed.rtl = ed.etl
         _ed.etl = ed.rtl
         return PetElement(_ed)
 
     # populate three nodes:
-    _nodes = [Node(f'DWM000{i}') for i in range(3)]
+    _nodes = [Node(f"DWM000{i}") for i in range(3)]
     # generate three random pets
     ertl = ErtlPayload.rand(3)
     # encouter matrix
@@ -122,10 +121,14 @@ def test_resolve_contacts():
     # node 1 has encountered nodes 0 and 2
     # node 2 has encoutered nodes 0 and 1
     _nodes[0].add_ertl(ErtlPayload(ertl.epoch, [ertl.pets[0], ertl.pets[1]]))
-    _nodes[1].add_ertl(ErtlPayload(ertl.epoch, [_mirror_pet(ertl.pets[0]), ertl.pets[2]]))
-    _nodes[2].add_ertl(ErtlPayload(ertl.epoch, [_mirror_pet(ertl.pets[1]), _mirror_pet(ertl.pets[2])]))
+    _nodes[1].add_ertl(
+        ErtlPayload(ertl.epoch, [_mirror_pet(ertl.pets[0]), ertl.pets[2]])
+    )
+    _nodes[2].add_ertl(
+        ErtlPayload(ertl.epoch, [_mirror_pet(ertl.pets[1]), _mirror_pet(ertl.pets[2])])
+    )
     nodes = Nodes(_nodes)
-    
+
     assert nodes.resolve_contacts(_nodes[0].get_rtl()) == [_nodes[1].uid, _nodes[2].uid]
     assert nodes.resolve_contacts(_nodes[1].get_rtl()) == [_nodes[0].uid, _nodes[2].uid]
     assert nodes.resolve_contacts(_nodes[2].get_rtl()) == [_nodes[0].uid, _nodes[1].uid]

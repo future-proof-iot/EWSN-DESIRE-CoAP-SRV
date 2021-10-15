@@ -29,12 +29,14 @@ async def handshake(addr, cred, authkey, conn_idi=None):
         remote_cred_cb=get_peer_cred,
         supported_ciphers=[CipherSuite0],
         selected_cipher=CipherSuite0,
-        ephemeral_key=None)
+        ephemeral_key=None,
+    )
 
     msg_1 = init.create_message_one()
 
-    request = Message(code=Code.POST, payload=msg_1,
-                      uri=f"coap://{addr}/.well-known/edhoc")
+    request = Message(
+        code=Code.POST, payload=msg_1, uri=f"coap://{addr}/.well-known/edhoc"
+    )
 
     logging.debug(f"POST ({init.edhoc_state}) {request.payload}")
     response = await context.request(request).response
@@ -43,15 +45,16 @@ async def handshake(addr, cred, authkey, conn_idi=None):
     msg_3 = init.create_message_three(response.payload)
 
     logging.debug(f"POST ({init.edhoc_state}) {request.payload}")
-    request = Message(code=Code.POST, payload=msg_3,
-                      uri=f"coap://{addr}/.well-known/edhoc")
+    request = Message(
+        code=Code.POST, payload=msg_3, uri=f"coap://{addr}/.well-known/edhoc"
+    )
     response = await context.request(request).response
 
     init.finalize()
-    logging.debug('EDHOC key exchange successfully completed:')
+    logging.debug("EDHOC key exchange successfully completed:")
 
-    secret = init.exporter('OSCORE Master Secret', 16)
-    salt = init.exporter('OSCORE Master Salt', 8)
+    secret = init.exporter("OSCORE Master Secret", 16)
+    salt = init.exporter("OSCORE Master Salt", 8)
     return salt, secret
 
 

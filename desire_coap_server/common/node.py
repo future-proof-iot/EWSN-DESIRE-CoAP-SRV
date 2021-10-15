@@ -7,7 +7,7 @@ from security.crypto import CryptoCtx
 from common import SERVER_CTX_ID
 
 
-class Node():
+class Node:
     """Class for managed nodes."""
 
     def __init__(self, uid: str):
@@ -19,7 +19,7 @@ class Node():
 
     @property
     def ctx_id(self):
-        return self.uid.encode('utf-8')
+        return self.uid.encode("utf-8")
 
     def has_crypto_ctx(self):
         return self.ctx.recv_ctx_key is not None
@@ -50,13 +50,13 @@ class Node():
             self.exposed = True
 
 
-class Nodes():
+class Nodes:
     """List of nodes"""
 
     def __init__(self, nodes: List[Node]):
         self.nodes = nodes
 
-    def get_node(self, uid:str):
+    def get_node(self, uid: str):
         for node in self.nodes:
             if node.uid == uid:
                 return node
@@ -65,8 +65,8 @@ class Nodes():
     def update_contact(self, rtl: List[Union[str, bytes]]):
         for node in self.nodes:
             node.update_contact(rtl)
-    
+
     def resolve_contacts(self, rtl: List[Union[str, bytes]]) -> List[str]:
-        '''Resolves the uids of contacts in the RTL'''
+        """Resolves the uids of contacts in the RTL"""
 
         return [node.uid for node in self.nodes if node.is_contact(rtl)]

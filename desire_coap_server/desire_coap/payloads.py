@@ -15,7 +15,7 @@ import os
 # support base64 enoding/decoding
 from base64 import b64encode, b64decode
 
-'''JSON Encoder that casts string fields to bytes'''
+"""JSON Encoder that casts string fields to bytes"""
 
 
 class Base64Encoder(json.JSONEncoder):
@@ -49,8 +49,18 @@ class EncounterData:
 
     def to_cbor_bytes(self) -> bytes:
         def _default_encoder(encoder, value):
-            encoder.encode(cbor2.CBORTag(
-                4000, [value.etl, value.rtl, value.exposure, value.req_count, value.avg_d_cm]))
+            encoder.encode(
+                cbor2.CBORTag(
+                    4000,
+                    [
+                        value.etl,
+                        value.rtl,
+                        value.exposure,
+                        value.req_count,
+                        value.avg_d_cm,
+                    ],
+                )
+            )
 
         return cbor2.dumps(self, default=_default_encoder)
 
@@ -73,7 +83,9 @@ class EncounterData:
             if tag.tag != 4000:
                 return tag
             # tag.value is now the [x, y] list we serialized before
-            return EncounterData(tag.value[0], tag.value[1], tag.value[2], tag.value[3], tag.value[4])
+            return EncounterData(
+                tag.value[0], tag.value[1], tag.value[2], tag.value[3], tag.value[4]
+            )
 
         return cbor2.loads(cbor_bytes, tag_hook=_tag_hook)
 
@@ -128,8 +140,12 @@ class ErtlPayload:
 
     def to_cbor_bytes(self) -> bytes:
         def _default_encoder(encoder, value):
-            encoder.encode(cbor2.CBORTag(
-                0xCAFE, [value.epoch, [element.pet.to_array() for element in self.pets]]))
+            encoder.encode(
+                cbor2.CBORTag(
+                    0xCAFE,
+                    [value.epoch, [element.pet.to_array() for element in self.pets]],
+                )
+            )
 
         return cbor2.dumps(self, default=_default_encoder)
 
@@ -138,7 +154,10 @@ class ErtlPayload:
         def _tag_hook(decoder, tag, shareable_index=None):
             if tag.tag != 0xCAFE:
                 return tag
-            return ErtlPayload(epoch=tag.value[0], pets=[PetElement.from_array(pet_array) for pet_array in tag.value[1]])
+            return ErtlPayload(
+                epoch=tag.value[0],
+                pets=[PetElement.from_array(pet_array) for pet_array in tag.value[1]],
+            )
 
         return cbor2.loads(cbor_bytes, tag_hook=_tag_hook)
 
@@ -153,10 +172,13 @@ class ErtlPayload:
                 rtl=rand_pet(),
                 exposure=random.randint(1, 100),
                 req_count=random.randint(1, 100),
-                avg_d_cm=round(random.uniform(10.5, 75.5), avg_d_precision))
+                avg_d_cm=round(random.uniform(10.5, 75.5), avg_d_precision),
+            )
 
-        return ErtlPayload(epoch=random.randint(1, 100),
-                           pets=[PetElement(pet=rand_EncounterData()) for i in range(num_pets)])
+        return ErtlPayload(
+            epoch=random.randint(1, 100),
+            pets=[PetElement(pet=rand_EncounterData()) for i in range(num_pets)],
+        )
 
 
 @dataclass
@@ -226,9 +248,10 @@ class InfectedPayload:
 
         return cbor2.loads(cbor_bytes, tag_hook=_tag_hook)
 
+
 @dataclass
 class TimeOfDayPayload:
-    time: int # ns since the unix epoch
+    time: int  # ns since the unix epoch
 
     def __eq__(self, other):
         if isinstance(other, TimeOfDayPayload):
@@ -244,7 +267,7 @@ class TimeOfDayPayload:
             encoder.encode(cbor2.CBORTag(0xCAFB, [value.time]))
 
         return cbor2.dumps(self, default=_default_encoder)
-    
+
     @classmethod
     def create_now(cls) -> TimeOfDayPayload:
         return TimeOfDayPayload(time=time.time_ns())
@@ -263,41 +286,43 @@ class TimeOfDayPayload:
 
         return cbor2.loads(cbor_bytes, tag_hook=_tag_hook)
 
+
 def load_json_dump_cbor(cls, json_filename: str, gen_cbor_file=True):
     def hex_dump(data: bytes) -> str:
         import re
-        return ' '.join(re.findall('..', data.hex()))
+
+        return " ".join(re.findall("..", data.hex()))
 
     obj = None
     with open(json_filename) as json_file:
-        obj = cls.from_json_str(''.join(json_file.readlines()))
-        print(f'{cls.__name__} instance = {obj}')
+        obj = cls.from_json_str("".join(json_file.readlines()))
+        print(f"{cls.__name__} instance = {obj}")
         obj_cbor_bytes = obj.to_cbor_bytes()
         print(
-            f'{cls.__name__} instance [{len(obj_cbor_bytes)} bytes] as cbor tag (decode cbor on http://cbor.me/): \n{hex_dump(obj_cbor_bytes)}')
-        assert cls.from_cbor_bytes(
-            obj_cbor_bytes) == obj, 'CBOR decoding failed'
+            f"{cls.__name__} instance [{len(obj_cbor_bytes)} bytes] as cbor tag (decode cbor on http://cbor.me/): \n{hex_dump(obj_cbor_bytes)}"
+        )
+        assert cls.from_cbor_bytes(obj_cbor_bytes) == obj, "CBOR decoding failed"
         # write cbor bytes to file
         if gen_cbor_file:
-            with open(os.path.splitext(json_filename)[0]+'.cbor', 'wb') as f:
+            with open(os.path.splitext(json_filename)[0] + ".cbor", "wb") as f:
                 f.write(obj_cbor_bytes)
         return obj
 
 
 if __name__ == "__main__":
 
-    load_json_dump_cbor(ErtlPayload, '../static/ertl.json')
-    '''
+    load_json_dump_cbor(ErtlPayload, "../static/ertl.json")
+    """
     ertl = load_json_dump_cbor('../static/ertl.json')
     ed = ertl.pets[0].pet
     print(f'ed = {ed.to_json_str()}')
     ed_cbor_bytes = ed.to_cbor_bytes()
     print(f'ed [{len(ed_cbor_bytes)} bytes] as cbor tag = {ed_cbor_bytes.hex()}')
     print(f'cbor decode : {EncounterData.from_cbor_bytes(ed_cbor_bytes)}')
-    '''
+    """
 
-    load_json_dump_cbor(EsrPayload, '../static/esr.json')
+    load_json_dump_cbor(EsrPayload, "../static/esr.json")
 
-    load_json_dump_cbor(InfectedPayload, '../static/infected.json')
+    load_json_dump_cbor(InfectedPayload, "../static/infected.json")
 
     # Reminder: use echo hex_bytes_string| xxd -r -ps | python -m cbor2.tool --pretty
