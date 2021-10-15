@@ -28,6 +28,7 @@ black:
     - cd desire_coap_server
     - pip install black anybadge
   script:
+    - mkdir ./black
     - black . --check
     - BLACK_STATUS=$?
     - anybadge --label=pipeline --color red  --value=$BLACK_STATUS --file=black/black.svg 1=green
