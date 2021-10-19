@@ -79,6 +79,7 @@ def event_loop():
 
 @pytest.fixture(autouse=True)
 def desire(request):
+    print(">>>>>> oucou")
     cmd = [
         "python",
         DESIRE_SERVER_PATH,
