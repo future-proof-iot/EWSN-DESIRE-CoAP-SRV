@@ -53,4 +53,5 @@ pytest:
   
   artifacts:
     paths:
-      - ./desire_coap/tests/*.txt
+      - ./stderr.txt
+      - ./stdout.txt
