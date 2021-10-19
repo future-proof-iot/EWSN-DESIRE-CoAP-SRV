@@ -39,6 +39,8 @@ black:
 pytest:
   stage: test
   needs: []
+  variables:
+    FF_NETWORK_PER_BUILD: 1
   before_script:
     - cd desire_coap_server/
     - pip install -r requirements.txt
