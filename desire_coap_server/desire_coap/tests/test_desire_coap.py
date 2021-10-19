@@ -82,7 +82,7 @@ def desire(request):
     proc = subprocess.Popen(cmd)
     # TODO: this will depend on the system is my guess, and ports might
     # collide
-    time.sleep(0.2)
+    time.sleep(0.4)
     request.addfinalizer(proc.kill)
 
 
