@@ -40,8 +40,8 @@ pytest:
   stage: test
   needs: []
   before_script:
-    - pip install -r requirements.txt
-    - pip install -r test_requirements.txt
+    - pip install -r desire_coap_server/requirements.txt
+    - pip install -r desire_coap_server/test_requirements.txt
     - pip install anybadge
   script:
     - cd desire_coap_server
