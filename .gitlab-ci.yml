@@ -45,6 +45,5 @@ pytest:
     - pip install -r test_requirements.txt
     - PYTHONPATH=. python tools/edhoc_generate_keys.py
   script:
-    - cd desire_coap_server
     - PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x --cov=. -vvv
 
