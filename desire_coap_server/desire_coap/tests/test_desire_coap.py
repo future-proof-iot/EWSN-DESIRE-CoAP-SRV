@@ -85,7 +85,7 @@ def desire(request):
         DESIRE_SERVER_PATH,
         f"--host={DESIRE_SERVER_HOST}", f"--port={DESIRE_SERVER_PORT}",
     ]
-    proc = subprocess.Popen(cmd)
+    proc = subprocess.Popen(cmd=["python", DESIRE_SERVER_PATH])
     # TODO: this will depend on the system is my guess, and ports might
     # collide
     time.sleep(1)
