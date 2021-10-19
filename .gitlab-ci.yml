@@ -36,9 +36,9 @@ black:
     paths:
       - ./black/
 
-
 pytest:
   stage: test
+  needs: []
   before_script:
     - pip install -r requirements.txt
     - pip install -r test_requirements.txt
