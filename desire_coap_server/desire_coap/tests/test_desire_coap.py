@@ -79,7 +79,7 @@ def event_loop():
 
 @pytest.fixture(autouse=True)
 def desire(request):
-    print(">>>>>> oucou")
+    print(">>>>>> coucou")
     cmd = [
         "python",
         DESIRE_SERVER_PATH,
@@ -88,7 +88,7 @@ def desire(request):
     proc = subprocess.Popen(cmd)
     # TODO: this will depend on the system is my guess, and ports might
     # collide
-    time.sleep(0.7)
+    time.sleep(1)
     request.addfinalizer(proc.kill)
 
 
