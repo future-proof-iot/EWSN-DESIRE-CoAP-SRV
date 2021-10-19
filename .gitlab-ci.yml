@@ -50,4 +50,6 @@ pytest:
   script:
     - pwd
     - PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x -s --cov=. -vvv
-
+      artifacts:
+  paths:
+      - ./desire_coap/tests/*.txt

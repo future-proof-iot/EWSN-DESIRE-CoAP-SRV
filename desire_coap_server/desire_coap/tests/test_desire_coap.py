@@ -86,6 +86,11 @@ def desire(request):
         f"--host={DESIRE_SERVER_HOST}", f"--port={DESIRE_SERVER_PORT}",
     ]
     cmd=["python", DESIRE_SERVER_PATH]
+    with open("stdout.txt","wb") as out, open("stderr.txt","wb") as err:
+        proc = subprocess.Popen(cmd,stdout=out,stderr=err)
+        time.sleep(1)
+        request.addfinalizer(proc.kill)
+    return
     proc = subprocess.Popen(cmd)
     # TODO: this will depend on the system is my guess, and ports might
     # collide
