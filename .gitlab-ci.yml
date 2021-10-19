@@ -46,6 +46,5 @@ pytest:
     - PYTHONPATH=. python tools/edhoc_generate_keys.py
   script:
     - cd desire_coap_server
-    - PYTHONPATH=. python -m pytest -x
     - PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x --cov=. -vvv
 
