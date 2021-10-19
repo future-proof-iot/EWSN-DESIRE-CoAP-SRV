@@ -40,9 +40,10 @@ pytest:
   stage: test
   needs: []
   before_script:
-    - pip install -r desire_coap_server/requirements.txt
-    - pip install -r desire_coap_server/test_requirements.txt
-    - pip install anybadge
+    - cd desire_coap_server/
+    - pip install -r equirements.txt
+    - pip install -r test_requirements.txt
+    - PYTHONPATH=. python tools/edhoc_generate_keys.py
   script:
     - cd desire_coap_server
     - PYTHONPATH=. python -m pytest -x
