@@ -44,6 +44,8 @@ pytest:
     - pip install -r requirements.txt
     - pip install -r test_requirements.txt
     - PYTHONPATH=. python tools/edhoc_generate_keys.py
+    - apt-get install -y net-tools
+    - ifconfig
   script:
     - PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x --cov=. -vvv
 
