@@ -1,4 +1,5 @@
 import os
+from sys import exec_prefix
 from typing import ByteString
 from security.crypto import CryptoCtx
 import subprocess
@@ -33,7 +34,7 @@ from desire_coap.payloads import (
 
 dirname = os.path.dirname(__file__)
 STATIC_FILES_DIR = os.path.join(dirname, "../../static")
-DESIRE_SERVER_HOST = "0.0.0.0"
+DESIRE_SERVER_HOST = "localhost"
 DESIRE_SERVER_PORT = 5683
 DESIRE_SERVER_PATH = os.path.join(dirname, "../../desire_coap_srv.py")
 DESIRE_COAP_EP = f"coap://localhost:{DESIRE_SERVER_PORT}"
@@ -79,18 +80,11 @@ def event_loop():
 
 @pytest.fixture(autouse=True)
 def desire(request):
-    print(">>>>>> coucou")
     cmd = [
         "python",
         DESIRE_SERVER_PATH,
         f"--host={DESIRE_SERVER_HOST}", f"--port={DESIRE_SERVER_PORT}",
     ]
-    cmd=["python", DESIRE_SERVER_PATH]
-    with open("stdout.txt","wb") as out, open("stderr.txt","wb") as err:
-        proc = subprocess.Popen(cmd,stdout=out,stderr=err)
-        time.sleep(1)
-        request.addfinalizer(proc.kill)
-    return
     proc = subprocess.Popen(cmd)
     # TODO: this will depend on the system is my guess, and ports might
     # collide
