@@ -44,7 +44,7 @@ pytest:
     - pip install -r requirements.txt
     - pip install -r test_requirements.txt
     - PYTHONPATH=. python tools/edhoc_generate_keys.py
-    - apt-get update && apt-get install -y net-tools
+    - apt-get update && apt-get install -y net-tools iputils-ping
     - ifconfig
     - ping -c 2 localhost
   script:
