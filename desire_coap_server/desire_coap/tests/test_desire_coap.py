@@ -33,7 +33,7 @@ from desire_coap.payloads import (
 
 dirname = os.path.dirname(__file__)
 STATIC_FILES_DIR = os.path.join(dirname, "../../static")
-DESIRE_SERVER_HOST = "localhost"
+DESIRE_SERVER_HOST = "127.0.0.1"
 DESIRE_SERVER_PORT = 5683
 DESIRE_SERVER_PATH = os.path.join(dirname, "../../desire_coap_srv.py")
 DESIRE_COAP_EP = f"coap://localhost:{DESIRE_SERVER_PORT}"
