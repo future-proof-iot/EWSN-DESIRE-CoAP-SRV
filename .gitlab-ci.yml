@@ -46,6 +46,7 @@ pytest:
     - PYTHONPATH=. python tools/edhoc_generate_keys.py
     - apt-get update && apt-get install -y net-tools
     - ifconfig
+    - ping -c 2 localhost
   script:
     - PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x --cov=. -vvv
 
