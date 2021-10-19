@@ -86,6 +86,7 @@ class DummyRqHandler(RqHandlerBase):
 
 
 def main(uid_list: List[str], host: str, port: int):
+    print(f">>> desire_coap_srv: uid={uid_list}, host={host}, port={port}")
     # Create node list with default test node
     nodes = Nodes([Node(TEST_NODE_UID_0), Node(TEST_NODE_UID_1)])
     if uid_list:

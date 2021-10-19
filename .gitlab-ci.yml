@@ -48,5 +48,6 @@ pytest:
     #- ifconfig
     #- ping -c 2 localhost
   script:
-    - PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -s --cov=. -vvv
+    - pwd
+    - PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x -s --cov=. -vvv
 
