@@ -37,14 +37,14 @@ black:
       - ./black/
 
 
-#pytest:
-#  stage: test
-#  before_script:
-#    - cd desire_coap_server
-#    - pip install -r requirements.txt
-#    - pip install -r test_requirements.txt
-#    - pip install anybadge
-#  script:
-#    - PYTHONPATH=. python -m pytest -x
-#    - 
+pytest:
+  stage: test
+  before_script:
+    - pip install -r requirements.txt
+    - pip install -r test_requirements.txt
+    - pip install anybadge
+  script:
+    - cd desire_coap_server
+    - PYTHONPATH=. python -m pytest -x
+    - PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x --cov=. -vvv
 
