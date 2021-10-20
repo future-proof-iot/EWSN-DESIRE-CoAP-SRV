@@ -23,6 +23,10 @@ from common.node import Node, Nodes
 
 # Coap Request handler to whom we formward the requests
 
+import logging
+
+LOGGER = logging.getLogger("coap-server:resources")
+
 
 class RqHandlerBase(ABC):
     @abstractmethod
@@ -352,13 +356,17 @@ class DesireCoapServer:
         self.__coap_root.add_resource(["time"], TimeOfDayResource())
 
     def run(self):
+        LOGGER.setLevel(logging.DEBUG)
         if not self.host or not self.port:
+            LOGGER.debug("running without bind")
             asyncio.Task(aiocoap.Context.create_server_context(self.__coap_root))
         else:
+            LOGGER.debug(f"running with bind {(self.host, self.port)}")
             asyncio.Task(
                 aiocoap.Context.create_server_context(
                     self.__coap_root, bind=(self.host, self.port)
                 )
             )
         print("CoAP Server Start")
+        LOGGER.debug("CoAP Server Start")
         asyncio.get_event_loop().run_forever()
