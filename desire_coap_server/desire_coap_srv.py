@@ -85,10 +85,8 @@ class DummyRqHandler(RqHandlerBase):
 
 def main(uid_list: List[str], host: str, port: int):
     # Create node list with default test node
-    nodes = Nodes([Node(TEST_NODE_UID_0), Node(TEST_NODE_UID_1)])
-    if uid_list:
-        for uid in uid_list:
-            nodes.nodes.append(Node(uid))
+    nodes_list = [Node(uid) for uid in uid_list] if uid_list else [Node(TEST_NODE_UID_0), Node(TEST_NODE_UID_1)]
+    nodes = Nodes(nodes_list)
     # Desire coap server instance , the rq_handler is the engine for handling post/get requests
     coap_server = DesireCoapServer(
         host, port, rq_handler=DummyRqHandler(nodes), nodes=nodes
