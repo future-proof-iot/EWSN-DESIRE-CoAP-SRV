@@ -13,4 +13,4 @@ RUN pip install -r requirements.txt
 EXPOSE 5683/udp
 VOLUME /root/.pepper
 
-CMD ["python", "desire_coap_srv.py", "--host", "0.0.0.0"]
+ENTRYPOINT ["python", "desire_coap_srv.py", "--host", "127.0.0.1"]
