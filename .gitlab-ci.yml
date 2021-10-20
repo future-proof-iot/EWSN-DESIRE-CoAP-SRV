@@ -10,6 +10,7 @@ stages:
 pylint:
   stage: static-analysis
   needs: []
+  allow_failure: true
   before_script:
     - pip install pylint pylint-exit anybadge
   script:
@@ -25,6 +26,7 @@ pylint:
 black:
   stage: formatting
   needs: []
+  allow_failure: true
   before_script:
     - pip install black anybadge
   script:
@@ -45,9 +47,10 @@ pytest:
     - pip install -r requirements.txt
     - pip install -r test_requirements.txt
     - PYTHONPATH=. python tools/edhoc_generate_keys.py
-    #- apt-get update && apt-get install -y net-tools iputils-ping
-    #- ifconfig
-    #- ping -c 2 localhost
+    - apt-get update && apt-get install -y net-tools iputils-ping
+    - ifconfig
+    - ping -c 2 localhost
+    - ping6 -c 2 ::1
   script:
     - pwd
     #- PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x -s --cov=. -vvv
