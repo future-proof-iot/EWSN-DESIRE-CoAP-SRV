@@ -37,7 +37,7 @@ def event_loop():
 
 @pytest.fixture(scope="session", autouse=True)
 def responder(request):
-    cmd = ["python", EDHOC_SERVER_PATH]
+    cmd = ["python", EDHOC_SERVER_PATH, '--host=127.0.0.1']
     proc = subprocess.Popen(cmd)
     time.sleep(0.4)
     request.addfinalizer(proc.kill)
