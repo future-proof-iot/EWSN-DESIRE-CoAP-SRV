@@ -9,6 +9,7 @@ stages:
 
 pylint:
   stage: static-analysis
+  needs: []
   before_script:
     - pip install pylint pylint-exit anybadge
   script:
