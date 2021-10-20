@@ -50,7 +50,7 @@ pytest:
     - apt-get update && apt-get install -y net-tools iputils-ping
     - ifconfig
     - ping -c 2 localhost
-    - ping6 -c 2 ::1
+    #- ping6 -c 2 ::1
   script:
     - pwd
     #- PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x -s --cov=. -vvv
