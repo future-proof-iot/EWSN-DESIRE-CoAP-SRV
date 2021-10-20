@@ -19,7 +19,8 @@ from security.edhoc_keys import add_peer_cred, rmv_peer_cred, generate_ed25519_p
 
 dirname = os.path.dirname(__file__)
 EDHOC_SERVER_PATH = os.path.join(dirname, "../../tools/edhoc_server.py")
-EDHOC_RESPONDER_EP = "coap://localhost:5683"
+EDHOC_SERVER_HOST = "127.0.0.1"
+EDHOC_RESPONDER_EP = f"coap://{EDHOC_SERVER_HOST}:5683"
 
 
 @pytest.fixture
@@ -37,7 +38,7 @@ def event_loop():
 
 @pytest.fixture(scope="session", autouse=True)
 def responder(request):
-    cmd = ["python", EDHOC_SERVER_PATH, '--host=127.0.0.1']
+    cmd = ["python", EDHOC_SERVER_PATH, f"--host={EDHOC_SERVER_HOST}"]
     proc = subprocess.Popen(cmd)
     time.sleep(0.4)
     request.addfinalizer(proc.kill)
@@ -101,7 +102,7 @@ async def test_well_known(event_loop):
 @pytest.mark.asyncio
 async def test_well_known_edhoc_and_decode(event_loop):
     authcred, authkey = credentials()
-    salt, secret = await initiator.handshake("localhost", authcred, authkey)
+    salt, secret = await initiator.handshake(EDHOC_SERVER_HOST, authcred, authkey)
     ctx = CryptoCtx(TEST_NODE_UID_0.encode(), SERVER_CTX_ID)
     ctx.generate_aes_ccm_keys(salt, secret)
     secret_msg = "A Secret Message"
@@ -115,7 +116,7 @@ async def test_well_known_edhoc_and_decode(event_loop):
 @pytest.mark.asyncio
 async def test_well_known_edhoc_and_encode(event_loop):
     authcred, authkey = credentials()
-    salt, secret = await initiator.handshake("localhost", authcred, authkey)
+    salt, secret = await initiator.handshake(EDHOC_SERVER_HOST, authcred, authkey)
     ctx = CryptoCtx(TEST_NODE_UID_0.encode(), SERVER_CTX_ID)
     ctx.generate_aes_ccm_keys(salt, secret)
     plain_msg = "Plain Text"
