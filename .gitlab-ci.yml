@@ -7,10 +7,27 @@ stages:
   - test
   #- doc
 
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+  DESIRE_COAP_SERVER_PATH: "$CI_PROJECT_DIR/desire_coap_server"
+
+cache:
+  paths:
+    - .cache/
+    - venv/
+
+before_script:
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+  - pip install pylint pylint-exit anybadge black
+  - pip install -r $DESIRE_COAP_SERVER_PATH/requirements.txt 
+  - pip install -r $DESIRE_COAP_SERVER_PATH/test_requirements.txt 
+
 pylint:
   stage: static-analysis
-  before_script:
-    - pip install pylint pylint-exit anybadge
+  needs: []
+  allow_failure: true
   script:
     - mkdir ./pylint
     - pylint --output-format=text desire_coap_server/ | tee ./pylint/pylint.log || pylint-exit $?
@@ -24,8 +41,7 @@ pylint:
 black:
   stage: formatting
   needs: []
-  before_script:
-    - pip install black anybadge
+  allow_failure: true
   script:
     - mkdir ./black
     - black desire_coap_server --check
@@ -36,15 +52,12 @@ black:
     paths:
       - ./black/
 
-
-#pytest:
-#  stage: test
-#  before_script:
-#    - cd desire_coap_server
-#    - pip install -r requirements.txt
-#    - pip install -r test_requirements.txt
-#    - pip install anybadge
-#  script:
-#    - PYTHONPATH=. python -m pytest -x
-#    - 
-
+pytest:
+  stage: test
+  needs: []
+  script:
+    - cd $DESIRE_COAP_SERVER_PATH
+    - pip freeze
+    - PYTHONPATH=$PYTHONPATH:. python tools/edhoc_generate_keys.py
+    - PYTHONPATH=$PYTHONPATH:. pytest -x --cov=. -vvv
+    #- PYTHONPATH=$PYTHONPATH:. pytest -x -s -o log_cli=true --log-cli-level=DEBUG

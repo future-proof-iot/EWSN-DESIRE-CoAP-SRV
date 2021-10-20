@@ -24,9 +24,7 @@ parser.add_argument(
     help="UIDs of enrolled nodes, must match stored CRED_ID",
 )
 parser.add_argument("--port", type=int, default=5683, help="The CoAP PORT")
-parser.add_argument(
-    "--host", type=str, default="localhost", help="The CoAP host interface"
-)
+parser.add_argument("--host", type=str, default=None, help="The CoAP host interface")
 parser.add_argument(
     "--loglevel", choices=LOG_LEVELS, default="info", help="Python logger log level"
 )
