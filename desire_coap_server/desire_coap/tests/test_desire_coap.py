@@ -37,7 +37,7 @@ STATIC_FILES_DIR = os.path.join(dirname, "../../static")
 DESIRE_SERVER_HOST = "127.0.0.1"
 DESIRE_SERVER_PORT = 5683
 DESIRE_SERVER_PATH = os.path.join(dirname, "../../desire_coap_srv.py")
-DESIRE_COAP_EP = f"coap://localhost:{DESIRE_SERVER_PORT}"
+DESIRE_COAP_EP = f"coap://{DESIRE_SERVER_HOST}:{DESIRE_SERVER_PORT}"
 
 TEST_NODE_INFECTED_EP = f"{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/infected"
 TEST_NODE_ESR_EP = f"{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/esr"
@@ -97,7 +97,7 @@ def desire(request):
 async def nodeFactory(event_loop, desire):
     async def test_node(uid: str) -> Node:
         authcred, authkey = credentials(uid.encode())
-        salt, secret = await initiator.handshake("localhost", authcred, authkey)
+        salt, secret = await initiator.handshake(DESIRE_SERVER_HOST, authcred, authkey)
         node = Node(uid)
         node.ctx = CryptoCtx(uid.encode("utf-8"), SERVER_CTX_ID)
         node.ctx.generate_aes_ccm_keys(salt, secret)
