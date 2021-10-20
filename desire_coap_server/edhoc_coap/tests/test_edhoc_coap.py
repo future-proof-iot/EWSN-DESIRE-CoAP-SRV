@@ -40,7 +40,7 @@ def event_loop():
 def responder(request):
     cmd = ["python", EDHOC_SERVER_PATH, f"--host={EDHOC_SERVER_HOST}"]
     proc = subprocess.Popen(cmd)
-    time.sleep(0.4)
+    time.sleep(1)
     request.addfinalizer(proc.kill)
 
 
