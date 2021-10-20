@@ -24,7 +24,9 @@ from common.node import Node, Nodes
 # Coap Request handler to whom we formward the requests
 
 import logging
+
 LOGGER = logging.getLogger("coap-server:resources")
+
 
 class RqHandlerBase(ABC):
     @abstractmethod
