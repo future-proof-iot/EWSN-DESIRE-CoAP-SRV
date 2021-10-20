@@ -335,6 +335,7 @@ async def test_timeofday(event_loop):
     code, payload = await _coap_resource(time_uri(), format=CONTENT_FORMAT_CBOR)
     assert code == CONTENT
     srv_time = TimeOfDayPayload.from_cbor_bytes(payload)
+    THS = 100
     assert (
-        abs(cur_time - srv_time.time) / 1e6 < 20
-    ), "Timestamp is 20 ms higher than expected"
+        abs(cur_time - srv_time.time) / 1e6 < THS
+    ), f"Timestamp is at least {THS} ms higher than expected"
