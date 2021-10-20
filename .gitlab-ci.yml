@@ -49,9 +49,5 @@ pytest:
     #- ping -c 2 localhost
   script:
     - pwd
-    - PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x -s --cov=. -vvv
-  
-  artifacts:
-    paths:
-      - ./stderr.txt
-      - ./stdout.txt
+    #- PYTHONPATH=$PYTHONPATH:desire_coap_server/ pytest -x -s --cov=. -vvv
+    - PYTHONPATH=$PYTHONPATH:. pytest -x -s -o log_cli=true --log-cli-level=DEBUG
