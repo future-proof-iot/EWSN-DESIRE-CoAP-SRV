@@ -1,4 +1,5 @@
 import os
+from sys import exec_prefix
 from typing import ByteString
 from security.crypto import CryptoCtx
 import subprocess
@@ -33,9 +34,10 @@ from desire_coap.payloads import (
 
 dirname = os.path.dirname(__file__)
 STATIC_FILES_DIR = os.path.join(dirname, "../../static")
+DESIRE_SERVER_HOST = "127.0.0.1"
 DESIRE_SERVER_PORT = 5683
 DESIRE_SERVER_PATH = os.path.join(dirname, "../../desire_coap_srv.py")
-DESIRE_COAP_EP = f"coap://localhost:{DESIRE_SERVER_PORT}"
+DESIRE_COAP_EP = f"coap://{DESIRE_SERVER_HOST}:{DESIRE_SERVER_PORT}"
 
 TEST_NODE_INFECTED_EP = f"{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/infected"
 TEST_NODE_ESR_EP = f"{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/esr"
@@ -78,11 +80,16 @@ def event_loop():
 
 @pytest.fixture(autouse=True)
 def desire(request):
-    cmd = ["python", DESIRE_SERVER_PATH, f"--port={DESIRE_SERVER_PORT}"]
+    cmd = [
+        "python",
+        DESIRE_SERVER_PATH,
+        f"--host={DESIRE_SERVER_HOST}",
+        f"--port={DESIRE_SERVER_PORT}",
+    ]
     proc = subprocess.Popen(cmd)
     # TODO: this will depend on the system is my guess, and ports might
     # collide
-    time.sleep(0.2)
+    time.sleep(1)
     request.addfinalizer(proc.kill)
 
 
@@ -91,7 +98,7 @@ def desire(request):
 async def nodeFactory(event_loop, desire):
     async def test_node(uid: str) -> Node:
         authcred, authkey = credentials(uid.encode())
-        salt, secret = await initiator.handshake("localhost", authcred, authkey)
+        salt, secret = await initiator.handshake(DESIRE_SERVER_HOST, authcred, authkey)
         node = Node(uid)
         node.ctx = CryptoCtx(uid.encode("utf-8"), SERVER_CTX_ID)
         node.ctx.generate_aes_ccm_keys(salt, secret)
@@ -329,6 +336,7 @@ async def test_timeofday(event_loop):
     code, payload = await _coap_resource(time_uri(), format=CONTENT_FORMAT_CBOR)
     assert code == CONTENT
     srv_time = TimeOfDayPayload.from_cbor_bytes(payload)
+    THS = 100
     assert (
-        abs(cur_time - srv_time.time) / 1e6 < 20
-    ), "Timestamp is 20 ms higher than expected"
+        abs(cur_time - srv_time.time) / 1e6 < THS
+    ), f"Timestamp is at least {THS} ms higher than expected"
