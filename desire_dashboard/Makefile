@@ -1,11 +1,13 @@
 # Handy makefile as reminder of docker/docker-compose ops
-
-DOCKER_COMPOSE?=UUID=$(shell id -u) GID=$(shell id -g) docker-compose
+DOCKER_COMPOSE ?= UUID=$(shell id -u) GID=$(shell id -g) PROV_NODES="${PROV_NODES}" docker-compose
+THIS_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
+COAP_SRV_PATH = ${THIS_DIR}/../desire_coap_server
+PROV_NODES ?= DWE549 DWDB44 DWFF6E
 
 build:
 	@echo 'Building and pulling images'
-	${DOCKER_COMPOSE} ${DOCKER_WORKDIR} build
 	${DOCKER_COMPOSE} pull
+	${DOCKER_COMPOSE} ${DOCKER_WORKDIR} build 
 
 up:
 	@echo 'Powering up the containers'
@@ -35,16 +37,12 @@ reset_db: clean
 	@echo 'reset influxdb'
 	rm -rf volumes/influxdb/config/* volumes/influxdb/data/*
 
-THIS_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
-COAP_SRV_PATH=${THIS_DIR}/../desire_coap_server
-PROV_NODES?=DWE549 DWDB44 DWFF6E
-
 launch_coap_server:
 	@echo "Laucnhining coap server with nodes = ${PROV_NODES} Press Ctrl+C to exit"
 	PYTHONPATH=${COAP_SRV_PATH} python ${COAP_SRV_PATH}/desire_coap_srv.py --host=127.0.0.1 --node-uid ${PROV_NODES} --event-log http://localhost:8080/telegraf
 
-clean_launch: reset_db up launch_coap_server
-	@echo 'You will never see this message'
+clean_launch: reset_db up
+	@echo 'All docker services up'
 
 gen_keys:
 	PYTHONPATH=${COAP_SRV_PATH} python ${COAP_SRV_PATH}/tools/edhoc_generate_keys.py

@@ -1,6 +1,23 @@
 version: "3.8"
 services:
-  # TODO: coap server service
+  # Coap server service
+  coap_srv:
+    build:
+      context: ../desire_coap_server
+    image: coap_srv:1.0.0
+    container_name: coap_srv
+    depends_on:
+      - telegraf
+    restart: always
+    tty: true
+    environment:
+      - PROV_NODES
+    command: --node-uid ${PROV_NODES} --event-log http://telegraf:8080/telegraf
+    ports:
+      - 5683:5683/udp
+    volumes:
+      - ${HOME}/.pepper:/root/.pepper
+
 
   # Agent for collecting data
   telegraf:
@@ -8,7 +25,6 @@ services:
     container_name: telegraf
     depends_on:
       - grafana
-    #  - coapsrv  # TODO depends on coap server servicves
     restart: always
     tty: true
     ports:
