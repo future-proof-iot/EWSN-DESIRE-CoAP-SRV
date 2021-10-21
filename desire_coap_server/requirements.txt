@@ -9,4 +9,5 @@ git+https://github.com/openwsn-berkeley/py-edhoc.git@0ffc0e4ceeb5ee23a956a7e7d87
 Jinja2==3.0.1
 termcolor==1.1.0
 pygments==2.10.0
-
+influxdb-client==1.21.0
+requests==2.26.0

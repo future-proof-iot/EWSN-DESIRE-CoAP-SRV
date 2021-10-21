@@ -129,6 +129,22 @@ class ErtlPayload:
                 return self.pets == other.pets
         return False
 
+    @property
+    def etl(self) -> List[Union[str, bytes]]:
+        return [pet.pet.etl for pet in self.pets]
+
+    @property
+    def rtl(self) -> List[Union[str, bytes]]:
+        return [pet.pet.rtl for pet in self.pets]
+
+    def get_encounter_data(
+        self, etl: Union[str, bytes], rtl: Union[str, bytes]
+    ) -> EncounterData:
+        for _pet in self.pets:
+            if etl == _pet.pet.etl and rtl == _pet.pet.rtl:
+                return _pet.pet
+        return None
+
     def to_json_str(self, indent=None):
         json_dict = asdict(self)
         return json.dumps(json_dict, cls=Base64Encoder, indent=indent)
