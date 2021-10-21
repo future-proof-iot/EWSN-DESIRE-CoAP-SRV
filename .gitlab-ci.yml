@@ -44,8 +44,7 @@ black:
   allow_failure: true
   script:
     - mkdir ./black
-    - black desire_coap_server --check
-    - BLACK_STATUS=$?
+    - black desire_coap_server --check || BLACK_STATUS=$?
     - anybadge --label=Black --color red  --value=$BLACK_STATUS --file=./black/black.svg 1=green
     - echo "Black status is $BLACK_STATUS"
   artifacts:
