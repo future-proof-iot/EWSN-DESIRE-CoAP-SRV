@@ -80,25 +80,17 @@ def event_loop():
 
 @pytest.fixture(autouse=True)
 def desire(request):
-    FLOG_PATH = f"{os.getcwd()}/desire_coap_srv_tests.log"
-    FLOG_URI = f"file:{FLOG_PATH}"
     cmd = [
         "python",
         DESIRE_SERVER_PATH,
         f"--host={DESIRE_SERVER_HOST}",
         f"--port={DESIRE_SERVER_PORT}",
-        f"--event-log={FLOG_URI}",
     ]
     proc = subprocess.Popen(cmd)
     # TODO: this will depend on the system is my guess, and ports might
     # collide
-    time.sleep(2)
-    # fixture teardown
-    def tear_down():
-        proc.kill
-        os.remove(FLOG_PATH)
-
-    request.addfinalizer(tear_down)
+    time.sleep(1)
+    request.addfinalizer(proc.kill)
 
 
 @pytest.fixture

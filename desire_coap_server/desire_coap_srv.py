@@ -13,7 +13,7 @@ from common import TEST_NODE_UID_0, TEST_NODE_UID_1
 from common.node import Node, Nodes
 from event_logger.file_logger import FileEventLogger
 from event_logger.http_logger import HttpEventLogger
-from event_logger.common import EventLogger
+from event_logger.common import EventLogger, SilentLogger
 
 logging.basicConfig(level=logging.INFO, format="%(name)14s - %(message)s")
 LOG_LEVELS = ("debug", "info", "warning", "error", "fatal", "critical")
@@ -52,6 +52,8 @@ class UriArgType(object):
 
     @classmethod
     def create_event_logger(cls, uri: str, format: str) -> EventLogger:
+        if not uri:
+            return SilentLogger("null")
         assert cls()(uri) == uri, "invalid uri {uri}"
         res = urlparse(uri)
         if res.scheme == "file":
@@ -67,7 +69,7 @@ class UriArgType(object):
 parser.add_argument(
     "--event-log",
     type=UriArgType(),
-    default=f"file:{os.getcwd()}/desire_coap_srv.log",
+    default=None,
     help="Endpoint uri for logging events [file|http]:<uri>",
 )
 
@@ -237,7 +239,6 @@ def main(uid_list: List[str], host: str, port: int, event_logger: EventLogger):
     event_logger.connect()
     LOGGER.info(f"event_logger={event_logger}")
     import atexit
-
     atexit.register(event_logger.disconnect)
     coap_server = DesireCoapServer(
         host, port, rq_handler=LoggingHandler(nodes, event_logger), nodes=nodes

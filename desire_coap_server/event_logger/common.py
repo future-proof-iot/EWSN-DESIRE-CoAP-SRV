@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 import abc
-from dataclasses import dataclass, field
+from dataclasses import Field, dataclass, field
 from desire_coap.payloads import EncounterData, ErtlPayload, PetElement, Base64Encoder
 from typing import Any, ClassVar, Dict, List, Union
 import time
@@ -69,6 +69,23 @@ class EventLogger(ABC):
         pass
 
     @abstractmethod
+    def log(self, data: DesireEvent) -> None:
+        pass
+
+
+@dataclass
+class SilentLogger(EventLogger):
+    connected: bool = field(default=False)
+
+    def connect(self) -> None:
+        self.connected = True
+
+    def disconnect(self) -> None:
+        self.connected = False
+
+    def is_connected(self) -> bool:
+        return self.connected
+
     def log(self, data: DesireEvent) -> None:
         pass
 
