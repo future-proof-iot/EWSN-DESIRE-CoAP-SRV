@@ -1,8 +1,10 @@
 # Handy makefile as reminder of docker/docker-compose ops
-DOCKER_COMPOSE ?= UUID=$(shell id -u) GID=$(shell id -g) PROV_NODES="${PROV_NODES}" docker-compose
+DOCKER_COMPOSE ?= UUID=$(shell id -u) GID=$(shell id -g) PROV_NODES="${PROV_NODES}" CREDENTIALS_FOLDER_PATH=${CREDENTIALS_FOLDER_PATH} docker-compose
 THIS_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 COAP_SRV_PATH = ${THIS_DIR}/../desire_coap_server
+
 PROV_NODES ?= DWE549 DWDB44 DWFF6E
+CREDENTIALS_FOLDER_PATH ?= "${HOME}/.pepper"
 
 build:
 	@echo 'Building and pulling images'

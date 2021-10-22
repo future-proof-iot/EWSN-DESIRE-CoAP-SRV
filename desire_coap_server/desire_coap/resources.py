@@ -328,8 +328,6 @@ class DesireCoapServer:
     __coap_root: resource.Site = field(init=False, repr=False)
 
     def __post_init__(self):
-        # load keys
-        edhoc_key = get_edhoc_keys()
         # add resources
         self.__coap_root = resource.Site()
         self.__coap_root.add_resource(
@@ -338,10 +336,15 @@ class DesireCoapServer:
                 self.__coap_root.get_resources_as_linkheader, impl_info=None
             ),
         )
-        self.__coap_root.add_resource(
-            (".well-known", "edhoc"),
-            EdhocResource(edhoc_key.authcred, edhoc_key.authkey, self.nodes),
-        )
+        # add edhoc resources if crypto is enabled
+        if self.nodes.have_crypto():
+            # load keys
+            edhoc_key = get_edhoc_keys()
+            self.__coap_root.add_resource(
+                (".well-known", "edhoc"),
+                EdhocResource(edhoc_key.authcred, edhoc_key.authkey, self.nodes),
+            )
+        # add desire resources
         for node in self.nodes.nodes:
             self.__coap_root.add_resource(
                 [node.uid, "ertl"], ErtlResource(node=node, handler=self.rq_handler)
