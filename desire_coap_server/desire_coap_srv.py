@@ -32,6 +32,18 @@ parser.add_argument("--host", type=str, default=None, help="The CoAP host interf
 parser.add_argument(
     "--loglevel", choices=LOG_LEVELS, default="info", help="Python logger log level"
 )
+parser.add_argument(
+    "--edhoc",
+    default=True,
+    action="store_true",
+    help="Enable edhoc resource for encryption/decryption",
+)
+parser.add_argument(
+    "--no-edhoc",
+    dest="edhoc",
+    action="store_false",
+    help="Disable edhoc resource for encryption/decryption",
+)
 
 
 class UriArgType(object):
@@ -226,12 +238,21 @@ class LoggingHandler(DummyRqHandler):
 # logging setup
 
 
-def main(uid_list: List[str], host: str, port: int, event_logger: EventLogger):
+def main(
+    uid_list: List[str],
+    host: str,
+    port: int,
+    event_logger: EventLogger,
+    edhoc_crypto: bool,
+):
     # Create node list with default test node
     nodes_list = (
-        [Node(uid) for uid in uid_list]
+        [Node(uid, crypto_ctx=edhoc_crypto) for uid in uid_list]
         if uid_list
-        else [Node(TEST_NODE_UID_0), Node(TEST_NODE_UID_1)]
+        else [
+            Node(TEST_NODE_UID_0, crypto_ctx=edhoc_crypto),
+            Node(TEST_NODE_UID_1, crypto_ctx=edhoc_crypto),
+        ]
     )
     nodes = Nodes(nodes_list)
 
@@ -239,6 +260,7 @@ def main(uid_list: List[str], host: str, port: int, event_logger: EventLogger):
     event_logger.connect()
     LOGGER.info(f"event_logger={event_logger}")
     import atexit
+
     atexit.register(event_logger.disconnect)
     coap_server = DesireCoapServer(
         host, port, rq_handler=LoggingHandler(nodes, event_logger), nodes=nodes
@@ -261,4 +283,5 @@ if __name__ == "__main__":
         event_logger=UriArgType.create_event_logger(
             uri=args.event_log, format="influx"
         ),
+        edhoc_crypto=args.edhoc,
     )

@@ -11,9 +11,9 @@ from common import SERVER_CTX_ID
 class Node:
     """Class for managed nodes."""
 
-    def __init__(self, uid: str):
+    def __init__(self, uid: str, crypto_ctx: bool = True):
         self.uid = uid  # also is cred_id
-        self.ctx = CryptoCtx(SERVER_CTX_ID, self.ctx_id)
+        self.ctx = CryptoCtx(SERVER_CTX_ID, self.ctx_id) if crypto_ctx else None
         self.infected = False
         self.exposed = False
         self.ertl: List[ErtlPayload] = list()
@@ -28,8 +28,11 @@ class Node:
     def ctx_id(self):
         return self.uid.encode("utf-8")
 
-    def has_crypto_ctx(self):
-        return self.ctx.recv_ctx_key is not None
+    def has_crypto_ctx(self) -> bool:
+        return self.has_crypto() and self.ctx.recv_ctx_key is not None
+
+    def has_crypto(self) -> bool:
+        return self.ctx is not None
 
     def add_ertl(self, ertl: ErtlPayload):
         self.ertl.append(ertl)
@@ -80,6 +83,12 @@ class Nodes:
             if node.uid == uid:
                 return node
         return None
+
+    def have_crypto_ctx(self) -> bool:
+        return all(node.has_crypto_ctx() for node in self.nodes)
+
+    def have_crypto(self) -> bool:
+        return all(node.has_crypto() for node in self.nodes)
 
     def update_contact(self, rtl: List[Union[str, bytes]]) -> List[Nodes]:
         contacts = []
