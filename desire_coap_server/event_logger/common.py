@@ -2,7 +2,13 @@ from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 import abc
 from dataclasses import Field, dataclass, field
-from desire_coap.payloads import EncounterData, ErtlPayload, PetElement, Base64Encoder
+from desire_coap.payloads import (
+    ContactUWBData,
+    EncounterData,
+    ErtlPayload,
+    PetElement,
+    Base64Encoder,
+)
 from typing import Any, ClassVar, Dict, List, Union
 import time
 import json
@@ -176,9 +182,9 @@ class ErtlEvent(DesireEvent):
             data["tags"]["etl"] = ed.etl
             data["tags"]["rtl"] = ed.rtl
             data["fields"]["epoch"] = self.epoch
-            data["fields"]["exposure"] = ed.exposure
-            data["fields"]["avg_d_cm"] = ed.avg_d_cm
-            data["fields"]["req_count"] = ed.req_count
+            data["fields"]["exposure"] = ed.uwb.exposure
+            data["fields"]["avg_d_cm"] = ed.uwb.avg_d_cm
+            data["fields"]["req_count"] = ed.uwb.req_count
             return data
 
         return [pet_entry(pet) for pet in self.payload.pets]
@@ -204,9 +210,9 @@ class ErtlEvent(DesireEvent):
             _ed = EncounterData(
                 etl=_etl,
                 rtl=_rtl,
-                exposure=_exposure,
-                req_count=_req_count,
-                avg_d_cm=_avg_d_cm,
+                uwb=ContactUWBData(
+                    exposure=_exposure, req_count=_req_count, avg_d_cm=_avg_d_cm
+                ),
             )
             evt = ErtlEvent(
                 node_id=_node_id,
