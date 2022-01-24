@@ -16,9 +16,10 @@ import os
 from base64 import b64encode, b64decode
 
 CBOR_TAG_DEFAULT = 4000
-CBOR_TAG_ERTL = 0xCAFE
-CBOR_TAG_ESR = 0xCAFF
-CBOR_TAG_INFECTED = 0xCAFF
+CBOR_TAG_ERTL_DEFAULT = 0x4544
+CBOR_TAG_CONTACT_UWB_DEFAULT = 0x4500
+CBOR_TAG_ESR_DEFAULT = 0xCAFF
+CBOR_TAG_INFECTED_DEFAULT = 0xCAFF
 """JSON Encoder that casts string fields to bytes"""
 
 
@@ -32,14 +33,72 @@ class Base64Encoder(json.JSONEncoder):
 
 # Coap payloads
 @dataclass
+class ContactUWBData:
+    exposure: int
+    req_count: int
+    avg_d_cm: int
+
+    def to_json_str(self):
+        json_dict = asdict(self)
+        return json.dumps(json_dict)
+
+    def to_cbor_bytes(self) -> bytes:
+        def _default_encoder(encoder, value):
+            encoder.encode(cbor2.CBORTag(
+            CBOR_TAG_CONTACT_UWB_DEFAULT,
+            [self.exposure, self.req_count, self.avg_d_cm],
+        ))
+
+        return cbor2.dumps(self, default=_default_encoder)
+
+    def to_cbor(self) -> Union[CBORTag, List]:
+        tag = cbor2.CBORTag(
+            CBOR_TAG_CONTACT_UWB_DEFAULT,
+            [self.exposure, self.req_count, self.avg_d_cm],
+        )
+        return tag
+
+    @staticmethod
+    def from_list(data: List):
+        # TODO , assert on typing in list elements
+        return ContactUWBData(*data)
+
+    @staticmethod
+    def from_json_str(json_string: str):
+        json_dict = json.loads(json_string)
+        return from_dict(data_class=ContactUWBData, data=json_dict)
+
+    @staticmethod
+    def from_cbor(cbor_list: CBORTag):
+        return ContactUWBData(*cbor_list.value)
+
+    @staticmethod
+    def from_cbor_bytes(cbor_bytes: bytes):
+        def _tag_hook(decoder, tag, shareable_index=None):
+            if tag.tag != CBOR_TAG_CONTACT_UWB_DEFAULT:
+                return tag
+            # tag.value is now the [x, y] list we serialized before
+            return ContactUWBData(tag.value[0], tag.value[1], tag.value[2])
+
+        return cbor2.loads(cbor_bytes, tag_hook=_tag_hook)
+
+    @staticmethod
+    def rand(avg_d_precision) -> ContactUWBData:
+        return ContactUWBData(
+            exposure=random.randint(1, 100),
+            req_count=random.randint(1, 100),
+            avg_d_cm=round(random.uniform(10.5, 75.5), avg_d_precision),
+        )
+
+
+# Coap payloads
+@dataclass
 class EncounterData:
     # Field forced to bytes, when set to string it is converted to bytes
     etl: Union[str, bytes]
     # Field forced to bytes, when set to string it is converted to bytes
     rtl: Union[str, bytes]
-    exposure: int
-    req_count: int
-    avg_d_cm: int
+    uwb: ContactUWBData
 
     def __post_init__(self):
         if isinstance(self.etl, str):
@@ -56,25 +115,28 @@ class EncounterData:
             encoder.encode(
                 cbor2.CBORTag(
                     CBOR_TAG_DEFAULT,
-                    [
-                        value.etl,
-                        value.rtl,
-                        value.exposure,
-                        value.req_count,
-                        value.avg_d_cm,
-                    ],
+                    [value.etl, value.rtl, value.uwb.to_cbor()],
                 )
             )
 
         return cbor2.dumps(self, default=_default_encoder)
 
     def to_array(self) -> List:
-        return [self.etl, self.rtl, self.exposure, self.req_count, self.avg_d_cm]
+        return [self.etl, self.rtl, self.uwb]
+
+    def to_cbor(self) -> Union[CBORTag, List]:
+        return [self.etl, self.rtl, self.uwb.to_cbor()]
 
     @staticmethod
     def from_list(data: List):
         # TODO , assert on typing in list elements
         return EncounterData(*data)
+
+    @staticmethod
+    def from_cbor(cbor_list: List):
+        return EncounterData(
+            cbor_list[0], cbor_list[1], ContactUWBData.from_cbor(cbor_list[2])
+        )
 
     @staticmethod
     def from_json_str(json_string: str):
@@ -88,10 +150,19 @@ class EncounterData:
                 return tag
             # tag.value is now the [x, y] list we serialized before
             return EncounterData(
-                tag.value[0], tag.value[1], tag.value[2], tag.value[3], tag.value[4]
+                tag.value[0], tag.value[1], ContactUWBData.from_cbor(tag.value[2])
             )
 
         return cbor2.loads(cbor_bytes, tag_hook=_tag_hook)
+
+    @staticmethod
+    def rand(avg_d_precision) -> EncounterData:
+        def rand_pet(size=32) -> bytes:
+            return os.urandom(size)
+
+        return EncounterData(
+            etl=rand_pet(), rtl=rand_pet(), uwb=ContactUWBData.rand(avg_d_precision)
+        )
 
 
 @dataclass
@@ -107,6 +178,13 @@ class PetElement:
 
     def to_array(self) -> List:
         return self.pet.to_array()
+
+    def to_cbor(self) -> Union[CBORTag, List]:
+        return self.pet.to_cbor()
+
+    @staticmethod
+    def from_cbor(cbor_list: Union[CBORTag, List]) -> PetElement:
+        return PetElement(EncounterData.from_cbor(cbor_list))
 
     @staticmethod
     def from_json_str(json_string: str):
@@ -162,8 +240,8 @@ class ErtlPayload:
         def _default_encoder(encoder, value):
             encoder.encode(
                 cbor2.CBORTag(
-                    CBOR_TAG_ERTL,
-                    [value.epoch, [element.pet.to_array() for element in self.pets]],
+                    CBOR_TAG_ERTL_DEFAULT,
+                    [value.epoch, [element.pet.to_cbor() for element in self.pets]],
                 )
             )
 
@@ -172,32 +250,23 @@ class ErtlPayload:
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
         def _tag_hook(decoder, tag, shareable_index=None):
-            if tag.tag != CBOR_TAG_ERTL:
+            if tag.tag != CBOR_TAG_ERTL_DEFAULT:
                 return tag
             return ErtlPayload(
                 epoch=tag.value[0],
-                pets=[PetElement.from_array(pet_array) for pet_array in tag.value[1]],
+                pets=[PetElement.from_cbor(pet_array) for pet_array in tag.value[1]],
             )
 
         return cbor2.loads(cbor_bytes, tag_hook=_tag_hook)
 
     @staticmethod
     def rand(num_pets, avg_d_precision=3):
-        def rand_pet(size=32) -> bytes:
-            return os.urandom(32)
-
-        def rand_EncounterData() -> EncounterData:
-            return EncounterData(
-                etl=rand_pet(),
-                rtl=rand_pet(),
-                exposure=random.randint(1, 100),
-                req_count=random.randint(1, 100),
-                avg_d_cm=round(random.uniform(10.5, 75.5), avg_d_precision),
-            )
-
         return ErtlPayload(
             epoch=random.randint(1, 100),
-            pets=[PetElement(pet=rand_EncounterData()) for i in range(num_pets)],
+            pets=[
+                PetElement(pet=EncounterData.rand(avg_d_precision))
+                for _ in range(num_pets)
+            ],
         )
 
 
@@ -216,7 +285,7 @@ class EsrPayload:
 
     def to_cbor_bytes(self) -> bytes:
         def _default_encoder(encoder, value):
-            encoder.encode(cbor2.CBORTag(CBOR_TAG_ESR, [value.contact]))
+            encoder.encode(cbor2.CBORTag(CBOR_TAG_ESR_DEFAULT, [value.contact]))
 
         return cbor2.dumps(self, default=_default_encoder)
 
@@ -228,7 +297,7 @@ class EsrPayload:
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
         def _tag_hook(decoder, tag, shareable_index=None):
-            if tag.tag != CBOR_TAG_ESR:
+            if tag.tag != CBOR_TAG_ESR_DEFAULT:
                 return tag
             return EsrPayload(contact=tag.value[0])
 
@@ -250,7 +319,7 @@ class InfectedPayload:
 
     def to_cbor_bytes(self) -> bytes:
         def _default_encoder(encoder, value):
-            encoder.encode(cbor2.CBORTag(CBOR_TAG_INFECTED, [value.infected]))
+            encoder.encode(cbor2.CBORTag(CBOR_TAG_INFECTED_DEFAULT, [value.infected]))
 
         return cbor2.dumps(self, default=_default_encoder)
 
@@ -262,7 +331,7 @@ class InfectedPayload:
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
         def _tag_hook(decoder, tag, shareable_index=None):
-            if tag.tag != CBOR_TAG_INFECTED:
+            if tag.tag != CBOR_TAG_INFECTED_DEFAULT:
                 return tag
             return InfectedPayload(infected=tag.value[0])
 
