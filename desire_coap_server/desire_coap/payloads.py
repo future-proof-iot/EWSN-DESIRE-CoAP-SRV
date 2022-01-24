@@ -15,6 +15,10 @@ import os
 # support base64 enoding/decoding
 from base64 import b64encode, b64decode
 
+CBOR_TAG_DEFAULT = 4000
+CBOR_TAG_ERTL = 0xCAFE
+CBOR_TAG_ESR = 0xCAFF
+CBOR_TAG_INFECTED = 0xCAFF
 """JSON Encoder that casts string fields to bytes"""
 
 
@@ -51,7 +55,7 @@ class EncounterData:
         def _default_encoder(encoder, value):
             encoder.encode(
                 cbor2.CBORTag(
-                    4000,
+                    CBOR_TAG_DEFAULT,
                     [
                         value.etl,
                         value.rtl,
@@ -80,7 +84,7 @@ class EncounterData:
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
         def _tag_hook(decoder, tag, shareable_index=None):
-            if tag.tag != 4000:
+            if tag.tag != CBOR_TAG_DEFAULT:
                 return tag
             # tag.value is now the [x, y] list we serialized before
             return EncounterData(
@@ -158,7 +162,7 @@ class ErtlPayload:
         def _default_encoder(encoder, value):
             encoder.encode(
                 cbor2.CBORTag(
-                    0xCAFE,
+                    CBOR_TAG_ERTL,
                     [value.epoch, [element.pet.to_array() for element in self.pets]],
                 )
             )
@@ -168,7 +172,7 @@ class ErtlPayload:
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
         def _tag_hook(decoder, tag, shareable_index=None):
-            if tag.tag != 0xCAFE:
+            if tag.tag != CBOR_TAG_ERTL:
                 return tag
             return ErtlPayload(
                 epoch=tag.value[0],
@@ -212,7 +216,7 @@ class EsrPayload:
 
     def to_cbor_bytes(self) -> bytes:
         def _default_encoder(encoder, value):
-            encoder.encode(cbor2.CBORTag(0xCAFF, [value.contact]))
+            encoder.encode(cbor2.CBORTag(CBOR_TAG_ESR, [value.contact]))
 
         return cbor2.dumps(self, default=_default_encoder)
 
@@ -224,7 +228,7 @@ class EsrPayload:
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
         def _tag_hook(decoder, tag, shareable_index=None):
-            if tag.tag != 0xCAFF:
+            if tag.tag != CBOR_TAG_ESR:
                 return tag
             return EsrPayload(contact=tag.value[0])
 
@@ -246,7 +250,7 @@ class InfectedPayload:
 
     def to_cbor_bytes(self) -> bytes:
         def _default_encoder(encoder, value):
-            encoder.encode(cbor2.CBORTag(0xCAFA, [value.infected]))
+            encoder.encode(cbor2.CBORTag(CBOR_TAG_INFECTED, [value.infected]))
 
         return cbor2.dumps(self, default=_default_encoder)
 
@@ -258,7 +262,7 @@ class InfectedPayload:
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
         def _tag_hook(decoder, tag, shareable_index=None):
-            if tag.tag != 0xCAFA:
+            if tag.tag != CBOR_TAG_INFECTED:
                 return tag
             return InfectedPayload(infected=tag.value[0])
 
