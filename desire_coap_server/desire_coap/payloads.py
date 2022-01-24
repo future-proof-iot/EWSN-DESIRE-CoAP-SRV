@@ -36,7 +36,7 @@ class Base64Encoder(json.JSONEncoder):
 class ContactUWBData:
     exposure: int
     req_count: int
-    avg_d_cm: int
+    avg_d_cm: Union[float, int]
 
     def to_json_str(self):
         json_dict = asdict(self)
