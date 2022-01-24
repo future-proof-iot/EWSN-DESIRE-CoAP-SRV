@@ -106,9 +106,9 @@ class EncounterData:
         if isinstance(self.rtl, str):
             self.rtl = b64decode(self.rtl)
 
-    def to_json_str(self):
+    def to_json_str(self, indent=None):
         json_dict = asdict(self)
-        return json.dumps(json_dict)
+        return json.dumps(json_dict, cls=Base64Encoder, indent=indent)
 
     def to_cbor_bytes(self) -> bytes:
         def _default_encoder(encoder, value):
