@@ -1,3 +1,9 @@
+.only-default: &only-default
+  only:
+    - master
+    - merge_requests
+    - tags
+
 default:
   image: python:3.8.12
 
@@ -5,6 +11,7 @@ stages:
   - static-analysis
   - formatting
   - test
+  - docker
   #- doc
 
 variables:
@@ -21,8 +28,8 @@ before_script:
   - virtualenv venv
   - source venv/bin/activate
   - pip install pylint pylint-exit anybadge black
-  - pip install -r $DESIRE_COAP_SERVER_PATH/requirements.txt 
-  - pip install -r $DESIRE_COAP_SERVER_PATH/test_requirements.txt 
+  - pip install -r $DESIRE_COAP_SERVER_PATH/requirements.txt
+  - pip install -r $DESIRE_COAP_SERVER_PATH/test_requirements.txt
 
 pylint:
   stage: static-analysis
@@ -60,3 +67,15 @@ pytest:
     - PYTHONPATH=$PYTHONPATH:. python tools/edhoc_generate_keys.py
     - PYTHONPATH=$PYTHONPATH:. pytest -x --cov=. -vvv
     #- PYTHONPATH=$PYTHONPATH:. pytest -x -s -o log_cli=true --log-cli-level=DEBUG
+
+docker-coap-server:
+  image: docker:19.03.12
+  stage: docker
+  services:
+    - docker:19.03.12-dind
+  variables:
+    IMAGE_TAG: $CI_DOCKERHUB_COAP_SERVER_IMAGE:$CI_COMMIT_REF_SLUG
+  script:
+    - docker login -u $CI_DOCKERHUB_USER -p $CI_DOCKERHUB_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_TAG ./desire_coap_sever
+    - docker push $IMAGE_TAG
