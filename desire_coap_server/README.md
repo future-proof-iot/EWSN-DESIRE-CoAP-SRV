@@ -8,7 +8,7 @@ Example of a server with nodes DW01E2 and DW0AB34 enrolled (Two default test
 nodes UIDs are always enrolled DW0001 and DW0002)
 
 ```shell
-$ python desire_coap_srv.py --nodes-uid DW01E2 DW0AB34
+$ python desire_coap_srv.py --node-uid DW01E2 DW0AB34
 ```
 
 For each node, identified by a 16-bit uid in hex format, the following resources are exposes:
