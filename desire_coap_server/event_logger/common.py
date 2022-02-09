@@ -320,9 +320,9 @@ class ResolvedEncouterEvent(DesireEvent):
         data["tags"]["rtl"] = ed.rtl
         data["tags"]["contact_id"] = self.payload.contact_id
         data["fields"]["epoch"] = self.payload.epoch
-        data["fields"]["exposure"] = ed.exposure
-        data["fields"]["avg_d_cm"] = ed.avg_d_cm
-        data["fields"]["req_count"] = ed.req_count
+        data["fields"]["exposure"] = ed.uwb.exposure
+        data["fields"]["avg_d_cm"] = ed.uwb.avg_d_cm
+        data["fields"]["req_count"] = ed.uwb.req_count
         return data
 
     @classmethod
@@ -344,9 +344,9 @@ class ResolvedEncouterEvent(DesireEvent):
         _ed = EncounterData(
             etl=_etl,
             rtl=_rtl,
-            exposure=_exposure,
-            req_count=_req_count,
-            avg_d_cm=_avg_d_cm,
+            uwb=ContactUWBData(
+                exposure=_exposure, req_count=_req_count, avg_d_cm=_avg_d_cm
+            ),
         )
         evt = ResolvedEncouterEvent(
             node_id=_node_id,
