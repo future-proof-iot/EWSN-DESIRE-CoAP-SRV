@@ -25,7 +25,7 @@ grafana    /run.sh                   Up      0.0.0.0:3000->3000/tcp,:::3000->300
 influxdb   /entrypoint.sh influxd    Up      0.0.0.0:8086->8086/tcp,:::8086->8086/tcp                              
 telegraf   /entrypoint.sh telegraf   Up      0.0.0.0:8080->8080/tcp,:::8080->8080/tcp, 8092/udp, 8094/tcp, 8125/udp
 ```
-4. Run the coap server with list of enrolled devices from the env variable `${PROV_NODES}`. This should be run in a dedicated terminal (blocking)
+4. Run the coap server with list of enrolled devices from the env variable `${PROV_NODES}`. This should be run in a dedicated terminal (blocking). In order to activate edhoc support, pass the env  variable `USE_EDHOC=yes`.
 ```shell
 $ PROV_NODES="DWE549 DWDB44 DWFF6E" make launch_coap_server 
 ```
@@ -50,11 +50,15 @@ status,host=telegraf,node_id=DWFF6E value="ok" 1632857590341673299
     - pass: `pepper`
 
 **Notes**
-1. Resetting the database
+1. Running the coap server along with other services (TIG stack)
+```shell
+$ COMPOSE_PROFILES=coaps-srv PROV_NODES="DWE549 DWDB44 DWFF6E" make up
+```
+2. Resetting the database
 ```shell
 $ make reset_db
 ```
 2. A clean start: this will stop the stack, clean the database and restart the stack and the coap server
 ```shell
-$ PROV_NODES="DWE549 DWDB44 DWFF6E" make clean_launch 
+$ COMPOSE_PROFILES=coaps-srv PROV_NODES="DWE549 DWDB44 DWFF6E" make clean_launch
 ```

@@ -2,6 +2,7 @@ version: "3.8"
 services:
   # Coap server service
   coap_srv:
+    profiles: ["coaps-srv"]
     build:
       context: ../desire_coap_server
     image: coap_srv:1.0.0

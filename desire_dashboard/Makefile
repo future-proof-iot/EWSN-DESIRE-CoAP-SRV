@@ -6,10 +6,12 @@ COAP_SRV_PATH = ${THIS_DIR}/../desire_coap_server
 PROV_NODES ?= DWE549 DWDB44 DWFF6E
 CREDENTIALS_FOLDER_PATH ?= "${HOME}/.pepper"
 
+COAP_SERVER_PROFILE=coaps-srv 
+
 build:
 	@echo 'Building and pulling images'
 	${DOCKER_COMPOSE} pull
-	${DOCKER_COMPOSE} ${DOCKER_WORKDIR} build 
+	COMPOSE_PROFILES=${COAP_SERVER_PROFILE} ${DOCKER_COMPOSE} build 
 
 up:
 	@echo 'Powering up the containers'
@@ -39,12 +41,16 @@ reset_db: clean
 	@echo 'reset influxdb'
 	rm -rf volumes/influxdb/config/* volumes/influxdb/data/*
 
+USE_EDHOC = --no-edhoc
+ifeq ($(USE_EDHOC),yes)
+USE_EDHOC = --edhoc
+endif
 launch_coap_server:
-	@echo "Laucnhining coap server with nodes = ${PROV_NODES} Press Ctrl+C to exit"
-	PYTHONPATH=${COAP_SRV_PATH} python ${COAP_SRV_PATH}/desire_coap_srv.py --host=127.0.0.1 --node-uid ${PROV_NODES} --event-log http://localhost:8080/telegraf
+	@echo "Laucnhing coap server with nodes = ${PROV_NODES} Press Ctrl+C to exit"
+	${DOCKER_COMPOSE} run --rm --name "coap_srv" coap_srv ${USE_EDHOC} --node-uid ${PROV_NODES} --event-log http://telegraf:8080/telegraf
 
 clean_launch: reset_db up
 	@echo 'All docker services up'
 
 gen_keys:
-	PYTHONPATH=${COAP_SRV_PATH} python ${COAP_SRV_PATH}/tools/edhoc_generate_keys.py
+	${DOCKER_COMPOSE} exec coap_srv python tools/edhoc_generate_keys.py
