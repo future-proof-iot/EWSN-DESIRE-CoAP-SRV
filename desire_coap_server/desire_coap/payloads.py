@@ -44,10 +44,12 @@ class ContactUWBData:
 
     def to_cbor_bytes(self) -> bytes:
         def _default_encoder(encoder, value):
-            encoder.encode(cbor2.CBORTag(
-            CBOR_TAG_CONTACT_UWB_DEFAULT,
-            [self.exposure, self.req_count, self.avg_d_cm],
-        ))
+            encoder.encode(
+                cbor2.CBORTag(
+                    CBOR_TAG_CONTACT_UWB_DEFAULT,
+                    [self.exposure, self.req_count, self.avg_d_cm],
+                )
+            )
 
         return cbor2.dumps(self, default=_default_encoder)
 

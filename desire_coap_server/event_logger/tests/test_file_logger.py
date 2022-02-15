@@ -14,6 +14,7 @@ ERTL_TEST_DATA_PATH = "static/ertl.json"
 with open(ERTL_TEST_DATA_PATH) as f:
     ERTL_TEST_DATA_JSON = json.load(f)
 
+
 def test_file_event_infection():
     try:
         flog = FileEventLogger("file:./log-tmp-inf.json")
