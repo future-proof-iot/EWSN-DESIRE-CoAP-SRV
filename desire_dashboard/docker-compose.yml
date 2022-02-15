@@ -29,6 +29,7 @@ services:
     container_name: telegraf
     depends_on:
       - grafana
+      - influxdb
     restart: always
     tty: true
     ports:
