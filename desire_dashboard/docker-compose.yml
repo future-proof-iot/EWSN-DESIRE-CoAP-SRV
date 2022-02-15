@@ -14,7 +14,8 @@ services:
     environment:
       - PROV_NODES
       - CREDENTIALS_FOLDER_PATH
-    command: --edhoc --node-uid ${PROV_NODES} --event-log http://telegraf:8080/telegraf
+      - USE_EDHOC
+    command: --node-uid ${PROV_NODES} --event-log http://telegraf:8080/telegraf ${USE_EDHOC}
     ports:
       - 5683:5683/udp
     volumes:
