@@ -1,13 +1,10 @@
+from abc import ABC, abstractmethod
+import asyncio
+from dataclasses import dataclass, field
 import logging
 
-from abc import ABC, abstractmethod
-
-import asyncio
-
-import aiocoap.resource as resource
+from aiocoap import resource
 import aiocoap
-
-from dataclasses import dataclass, field
 
 from desire_srv.coap.desire.payloads import (
     ErtlPayload,
@@ -15,7 +12,6 @@ from desire_srv.coap.desire.payloads import (
     EsrPayload,
     TimeOfDayPayload,
 )
-
 from desire_srv.security.edhoc_keys import get_edhoc_keys
 from desire_srv.coap.edhoc.responder import EdhocResource
 from desire_srv.common.node import Node, Nodes
@@ -52,9 +48,7 @@ class RqHandlerBase(ABC):
 
 # Coap resources
 class TimeOfDayResource(resource.Resource):
-    def __init__(self):
-        super().__init__()
-
+    # pylint: disable=no-self-use
     async def render_get(self, request):
         rsp = aiocoap.Message(mtype=request.mtype)
         content_format = request.opt.content_format
@@ -74,6 +68,7 @@ class TimeOfDayResource(resource.Resource):
                     mtype=request.mtype,
                     code=aiocoap.numbers.codes.Code.UNSUPPORTED_CONTENT_FORMAT,
                 )
+        # pylint: disable=(broad-except)
         except Exception as e:
             print(e)
             rsp = aiocoap.Message(
@@ -99,9 +94,9 @@ class NodeResource(resource.Resource):
         if self.node.has_crypto_ctx():
             try:
                 return self.node.ctx.decrypt(payload)
+            # pylint: disable=(broad-except)
             except Exception as e:
                 print(f"ERROR: unhandled {e}")
-                pass
         return payload
 
     def encrypt(self, payload):
@@ -141,6 +136,7 @@ class ErtlResource(NodeResource):
                     mtype=request.mtype,
                     code=aiocoap.numbers.codes.Code.UNSUPPORTED_CONTENT_FORMAT,
                 )
+        # pylint: disable=(broad-except)
         except Exception as e:
             print(e)
             rsp = aiocoap.Message(
@@ -170,6 +166,7 @@ class ErtlResource(NodeResource):
                     mtype=request.mtype,
                     code=aiocoap.numbers.codes.Code.UNSUPPORTED_CONTENT_FORMAT,
                 )
+        # pylint: disable=(broad-except)
         except Exception as e:
             print(e)
             rsp = aiocoap.Message(
@@ -209,6 +206,7 @@ class InfectedResource(NodeResource):
                     mtype=request.mtype,
                     code=aiocoap.numbers.codes.Code.UNSUPPORTED_CONTENT_FORMAT,
                 )
+        # pylint: disable=(broad-except)
         except Exception as e:
             print(e)
             rsp = aiocoap.Message(
@@ -240,6 +238,7 @@ class InfectedResource(NodeResource):
                     mtype=request.mtype,
                     code=aiocoap.numbers.codes.Code.UNSUPPORTED_CONTENT_FORMAT,
                 )
+        # pylint: disable=(broad-except)
         except Exception as e:
             print(e)
             rsp = aiocoap.Message(
@@ -266,6 +265,7 @@ class ResetResource(NodeResource):
                     mtype=request.mtype,
                     code=aiocoap.numbers.codes.Code.UNSUPPORTED_CONTENT_FORMAT,
                 )
+        # pylint: disable=(broad-except)
         except Exception as e:
             print(e)
             rsp = aiocoap.Message(
@@ -305,6 +305,7 @@ class EsrResource(NodeResource):
                     mtype=request.mtype,
                     code=aiocoap.numbers.codes.Code.UNSUPPORTED_CONTENT_FORMAT,
                 )
+        # pylint: disable=(broad-except)
         except Exception as e:
             print(e)
             rsp = aiocoap.Message(
@@ -334,6 +335,7 @@ class EsrResource(NodeResource):
                     mtype=request.mtype,
                     code=aiocoap.numbers.codes.Code.UNSUPPORTED_CONTENT_FORMAT,
                 )
+        # pylint: disable=(broad-except)
         except Exception as e:
             print(e)
             rsp = aiocoap.Message(

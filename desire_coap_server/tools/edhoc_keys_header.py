@@ -26,12 +26,11 @@ import argparse
 import base64
 import os
 import textwrap
-from dataclasses import dataclass, asdict
 from typing import ByteString, Dict
-
+from dataclasses import dataclass, asdict
 import cbor2
-from cose.headers import KID
 from jinja2 import Environment, FileSystemLoader
+from cose.headers import KID
 
 from desire_srv.security.edhoc_keys import (
     generate_edhoc_keys,
@@ -104,7 +103,7 @@ def keys_header(out_dir: str, kid: ByteString = None, add_cred: bool = False):
     header = template.render(config, zip=zip)
 
     dest = os.path.join(out_dir, f'{config["name"]}_{KEYS_FILE_NAME}')
-    with open(dest, "w+") as _file:
+    with open(dest, "w+", encoding="utf-8") as _file:
         _file.write(header)
 
     if add_cred:

@@ -1,18 +1,15 @@
 from __future__ import annotations
+import re
 import time
-from typing import List, Union
-from dataclasses import dataclass, asdict
-from cbor2.types import CBORTag
-from dacite import from_dict
-
 import json
-import cbor2
-
 import random
 import os
-
-# support base64 enoding/decoding
+from typing import List, Union
+from dataclasses import dataclass, asdict
 from base64 import b64encode, b64decode
+import cbor2
+from cbor2.types import CBORTag
+from dacite import from_dict
 
 CBOR_TAG_DEFAULT = 4000
 CBOR_TAG_ERTL_DEFAULT = 0x4544
@@ -42,7 +39,7 @@ class ContactUWBData:
         return json.dumps(json_dict)
 
     def to_cbor_bytes(self) -> bytes:
-        def _default_encoder(encoder, value):
+        def _default_encoder(encoder, _value):
             encoder.encode(
                 cbor2.CBORTag(
                     CBOR_TAG_CONTACT_UWB_DEFAULT,
@@ -75,7 +72,7 @@ class ContactUWBData:
 
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
-        def _tag_hook(decoder, tag, shareable_index=None):
+        def _tag_hook(_decoder, tag, _shareable_index=None):
             if tag.tag != CBOR_TAG_CONTACT_UWB_DEFAULT:
                 return tag
             # tag.value is now the [x, y] list we serialized before
@@ -146,7 +143,7 @@ class EncounterData:
 
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
-        def _tag_hook(decoder, tag, shareable_index=None):
+        def _tag_hook(_decoder, tag, _shareable_index=None):
             if tag.tag != CBOR_TAG_DEFAULT:
                 return tag
             # tag.value is now the [x, y] list we serialized before
@@ -250,7 +247,7 @@ class ErtlPayload:
 
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
-        def _tag_hook(decoder, tag, shareable_index=None):
+        def _tag_hook(_decoder, tag, _shareable_index=None):
             if tag.tag != CBOR_TAG_ERTL_DEFAULT:
                 return tag
             return ErtlPayload(
@@ -297,7 +294,7 @@ class EsrPayload:
 
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
-        def _tag_hook(decoder, tag, shareable_index=None):
+        def _tag_hook(_decoder, tag, _shareable_index=None):
             if tag.tag != CBOR_TAG_ESR_DEFAULT:
                 return tag
             return EsrPayload(contact=tag.value[0])
@@ -331,7 +328,7 @@ class InfectedPayload:
 
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes):
-        def _tag_hook(decoder, tag, shareable_index=None):
+        def _tag_hook(_decoder, tag, _shareable_index=None):
             if tag.tag != CBOR_TAG_INFECTED_DEFAULT:
                 return tag
             return InfectedPayload(infected=tag.value[0])
@@ -369,7 +366,7 @@ class TimeOfDayPayload:
 
     @staticmethod
     def from_cbor_bytes(cbor_bytes: bytes) -> TimeOfDayPayload:
-        def _tag_hook(decoder, tag, shareable_index=None):
+        def _tag_hook(_decoder, tag, _shareable_index=None):
             if tag.tag != 0xCAFB:
                 return tag
             return TimeOfDayPayload(time=tag.value[0])
@@ -379,12 +376,11 @@ class TimeOfDayPayload:
 
 def load_json_dump_cbor(cls, json_filename: str, gen_cbor_file=True):
     def hex_dump(data: bytes) -> str:
-        import re
 
         return " ".join(re.findall("..", data.hex()))
 
     obj = None
-    with open(json_filename) as json_file:
+    with open(json_filename, encoding="utf-8") as json_file:
         obj = cls.from_json_str("".join(json_file.readlines()))
         print(f"{cls.__name__} instance = {obj}")
         obj_cbor_bytes = obj.to_cbor_bytes()
@@ -395,7 +391,8 @@ def load_json_dump_cbor(cls, json_filename: str, gen_cbor_file=True):
         assert cls.from_cbor_bytes(obj_cbor_bytes) == obj, "CBOR decoding failed"
         # write cbor bytes to file
         if gen_cbor_file:
-            with open(os.path.splitext(json_filename)[0] + ".cbor", "wb") as f:
+            filename = os.path.splitext(json_filename)[0] + ".cbor"
+            with open(filename, "wb", encoding="utf-8") as f:
                 f.write(obj_cbor_bytes)
         return obj
 
@@ -403,6 +400,7 @@ def load_json_dump_cbor(cls, json_filename: str, gen_cbor_file=True):
 if __name__ == "__main__":
 
     load_json_dump_cbor(ErtlPayload, "../static/ertl.json")
+    # pylint: disable=pointless-string-statement
     """
     ertl = load_json_dump_cbor('../static/ertl.json')
     ed = ertl.pets[0].pet

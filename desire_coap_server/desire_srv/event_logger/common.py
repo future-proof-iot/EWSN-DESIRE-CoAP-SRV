@@ -1,7 +1,10 @@
 from __future__ import annotations
+from typing import Any, ClassVar, Dict, List
+import json
 from abc import ABC, ABCMeta, abstractmethod
-import abc
+import time
 from dataclasses import dataclass, field
+from influxdb_client.client.write import point as influx_point
 from desire_srv.coap.desire.payloads import (
     ContactUWBData,
     EncounterData,
@@ -9,10 +12,6 @@ from desire_srv.coap.desire.payloads import (
     PetElement,
     Base64Encoder,
 )
-from typing import Any, ClassVar, Dict, List
-import time
-import json
-from influxdb_client.client.write import point as influx_point
 
 
 @dataclass
@@ -22,7 +21,7 @@ class DesireEvent(metaclass=ABCMeta):
     timestamp: int = field(init=False)  # of the event creation
 
     def to_influx_dict(self) -> Dict:
-        data = dict()
+        data = {}
         data["measurement"] = "undefined"
         data["tags"] = {"node_id": self.node_id}
         data["fields"] = {}
@@ -34,7 +33,7 @@ class DesireEvent(metaclass=ABCMeta):
         points = self.to_influx_dict()
         # convert bytearrays to base64 trick
         points = json.loads(json.dumps(points, cls=Base64Encoder))
-        assert isinstance(points, list) or isinstance(points, dict)
+        assert isinstance(points, (dict, list))
         if isinstance(points, list):
             for p in points:
                 point = influx_point.Point.from_dict(p)
@@ -49,7 +48,8 @@ class DesireEvent(metaclass=ABCMeta):
     def to_json_str(self) -> str:
         return json.dumps(self.to_influx_dict(), cls=Base64Encoder)
 
-    @abc.abstractclassmethod
+    @classmethod
+    @abstractmethod
     def from_influx_dict(cls, data: Dict) -> DesireEvent:
         pass
 
@@ -101,7 +101,9 @@ class InfectionEvent(DesireEvent):
     payload: bool
 
     def __post_init__(self):
-        assert type(self.payload) == bool, f"Invalid payload type {type(self.payload)}"
+        assert isinstance(
+            self.payload, bool
+        ), f"Invalid payload type {type(self.payload)}"
         self.timestamp = super().timestamp_ns()
 
     @property
@@ -135,7 +137,7 @@ class ExposureEvent(DesireEvent):
     payload: bool
 
     def __post_init__(self):
-        assert type(self.payload) == bool
+        assert isinstance(self.payload, bool)
         self.timestamp = time.time_ns()
 
     @property
@@ -167,7 +169,9 @@ class ErtlEvent(DesireEvent):
     payload: ErtlPayload
 
     def __post_init__(self):
-        assert type(self.payload) == ErtlPayload, f"invalid type {type(self.payload)}"
+        assert isinstance(
+            self.payload, ErtlPayload
+        ), f"invalid type {type(self.payload)}"
         self.timestamp = time.time_ns()
 
     @property
@@ -177,6 +181,7 @@ class ErtlEvent(DesireEvent):
     def to_influx_dict(self) -> List[Dict]:
         def pet_entry(pet: PetElement) -> Dict:
             ed = pet.pet
+            # pylint: disable=(bad-super-call)
             data = super(self.__class__, self).to_influx_dict()
             data["measurement"] = "pets"
             data["tags"]["etl"] = ed.etl
@@ -250,7 +255,9 @@ class StatusEvent(DesireEvent):
     __STATUS_VALUES: ClassVar[List[str]] = [OK, INFECTED, EXPOSED]
 
     def __post_init__(self):
-        assert type(self.payload) == str, f"Invalid payload type {type(self.payload)}"
+        assert isinstance(
+            self.payload, str
+        ), f"Invalid payload type {type(self.payload)}"
         assert (
             self.payload in StatusEvent.__STATUS_VALUES
         ), f"invalid status payload {self.payload}"
@@ -303,8 +310,8 @@ class ResolvedEncouterEvent(DesireEvent):
     payload: ResolvedEncouterData
 
     def __post_init__(self):
-        assert (
-            type(self.payload) == ResolvedEncouterData
+        assert isinstance(
+            self.payload, ResolvedEncouterData
         ), f"invalid type {type(self.payload)}"
         self.timestamp = time.time_ns()
 
@@ -313,6 +320,7 @@ class ResolvedEncouterEvent(DesireEvent):
         return self.payload.epoch
 
     def to_influx_dict(self) -> Dict:
+        # pylint: disable=(bad-super-call)
         data = super(self.__class__, self).to_influx_dict()
         data["measurement"] = "rpets"
         ed = self.payload.pet
@@ -327,7 +335,9 @@ class ResolvedEncouterEvent(DesireEvent):
 
     @classmethod
     def from_influx_dict(cls, data: Dict) -> ResolvedEncouterEvent:
-        assert data["measurement"] == "rpets", f"Invalid measurement type in {data}"
+        assert (
+            data["measurement"] == "rpets"
+        ), f"Invalid measuremisinstancetype in {data}"
         # tags
         _node_id = data["tags"]["node_id"]
         _contact_id = data["tags"]["contact_id"]

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import atexit
 from urllib.parse import urlparse
 import argparse
 import logging
@@ -12,8 +13,6 @@ from desire_srv.common import TEST_NODE_UID_0, TEST_NODE_UID_1
 from desire_srv.common.node import Node, Nodes
 from desire_srv.event_logger.file_logger import FileEventLogger
 from desire_srv.event_logger.http_logger import HttpEventLogger
-
-# request handler that logs to  http agent (telegraf)
 from desire_srv.event_logger.common import (
     ErtlEvent,
     EventLogger,
@@ -57,7 +56,7 @@ PARSER.add_argument(
 )
 
 
-class UriArgType(object):
+class UriArgType():
     VALID_SCHEMES = ("file", "http")
 
     def __call__(self, uri):
@@ -74,6 +73,7 @@ class UriArgType(object):
         return uri
 
     @classmethod
+    # pylint: disable=redefined-builtin
     def create_event_logger(cls, uri: str, format: str) -> EventLogger:
         if not uri:
             return SilentLogger("null")
@@ -117,7 +117,7 @@ class DummyRqHandler(RqHandlerBase):
     def get_ertl(self, node: Node) -> ErtlPayload:
         # NOTE: this will never be called
         ertl = None
-        with open("static/ertl.json") as json_file:
+        with open("static/ertl.json", encoding="utf-8") as json_file:
             ertl = ErtlPayload.from_json_str("".join(json_file.readlines()))
         LOGGER.info(
             f"[{self.__class__.__name__}] update_ertl: uid={node.uid}, ertl = {ertl}"
@@ -148,9 +148,8 @@ class DummyRqHandler(RqHandlerBase):
             f"[{self.__class__.__name__}] set_exposed: uid={node.uid} exposed={status}"
         )
         node.exposed = status
-        return None
 
-
+# request handler that logs to  http agent (telegraf)
 class LoggingHandler(DummyRqHandler):
     def __init__(self, nodes: Nodes, event_logger: EventLogger):
         super().__init__(nodes)
@@ -259,7 +258,6 @@ def run(
     # post/get requests
     event_logger.connect()
     LOGGER.info(f"event_logger={event_logger}")
-    import atexit
 
     atexit.register(event_logger.disconnect)
     coap_server = DesireCoapServer(

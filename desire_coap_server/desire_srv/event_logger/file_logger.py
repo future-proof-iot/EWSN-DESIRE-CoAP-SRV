@@ -22,12 +22,12 @@ class FileEventLogger(EventLogger):
                 self.path, os.W_OK
             ), f"File {self.path} is not accessible for writing"
         # check output format
-        assert (
-            self.format == "json" or self.format == "influx"
+        assert (self.format in ('json', 'influx')
         ), f"invalid format {self.format} must be json|influx"
 
-    def connect(self, mode="w") -> None:
-        self.handle = open(self.path, mode)
+    # pylint: disable=consider-using-with
+    def connect(self) -> None:
+        self.handle = open(self.path, mode="w", encoding="utf-8")
 
     def disconnect(self) -> None:
         self.handle.close()

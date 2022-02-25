@@ -117,6 +117,7 @@ async def _coap_resource(url, method=GET, payload=b"", format=CONTENT_FORMAT_TEX
     request.set_request_uri(url)
     try:
         response = await protocol.request(request).response
+    # pylint: disable=(broad-except)
     except Exception as e:
         code = "Failed to fetch resource"
         payload = "{0}".format(e)
@@ -260,7 +261,7 @@ async def test_esr_CBOR(event_loop, nodeFactory):
 async def test_ertl_JSON(event_loop, nodeFactory):
     testnode = await nodeFactory(TEST_NODE_UID_0)
     assert testnode.has_crypto_ctx()
-    with open(f"{STATIC_FILES_DIR}/ertl.json") as json_file:
+    with open(f"{STATIC_FILES_DIR}/ertl.json", encoding="utf-8") as json_file:
         ertl = ErtlPayload.from_json_str("".join(json_file.readlines()))
     payload = testnode.ctx.encrypt(ertl.to_json_str().encode())
     code, payload = await _coap_resource(

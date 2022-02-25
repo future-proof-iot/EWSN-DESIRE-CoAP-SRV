@@ -1,8 +1,8 @@
-from dataclasses import dataclass, field
+import warnings
 from urllib.parse import urlparse
+from dataclasses import dataclass, field
 import requests
 from requests.status_codes import codes as http_codes
-import warnings
 from .common import DesireEvent, EventLogger
 
 
@@ -16,8 +16,9 @@ class HttpEventLogger(EventLogger):
         assert res.scheme == "http", "Invalid uri, must be http"
         assert res.path == "/telegraf"
         # check output format
-        assert (
-            self.format == "json" or self.format == "influx"
+        assert self.format in (
+            "json",
+            "influx",
         ), f"invalid format {self.format} must be json|influx"
 
     def connect(self) -> None:
@@ -46,6 +47,7 @@ class HttpEventLogger(EventLogger):
                         f"{status_code}({http_codes[status_code]}) instead of 204",
                         RuntimeWarning,
                     )
+            # pylint: disable=(broad-except)
             except Exception as e:
                 warnings.warn(f"Http post crash: {e}")
 

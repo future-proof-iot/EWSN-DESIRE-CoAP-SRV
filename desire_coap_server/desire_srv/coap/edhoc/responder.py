@@ -5,7 +5,7 @@ import logging
 from typing import ByteString, Dict
 
 import aiocoap
-import aiocoap.resource as resource
+from aiocoap import resource
 
 from edhoc.messages import EdhocMessage, MessageThree
 from edhoc.definitions import EdhocState, CipherSuite0
@@ -23,14 +23,14 @@ logger = logging.getLogger("edhoc.coap")
 
 class EdhocResource(resource.Resource):
     def __init__(self, cred, auth_key, nodes: Nodes):
-        super(EdhocResource, self).__init__()
+        super().__init__()
         self.cred_idr = {KID: cred.kid}
         self.cred = cred
         self.auth_key = auth_key
         self.supported = [CipherSuite0]
         self.nodes = nodes
         # TODO: limit size
-        self.responders: Dict[ByteString, Responder] = dict()
+        self.responders: Dict[ByteString, Responder] = {}
 
     @classmethod
     def get_peer_cred(cls, cred_id: CoseHeaderMap):
@@ -56,12 +56,14 @@ class EdhocResource(resource.Resource):
     def del_responder(self, resp: Responder):
         del self.responders[resp.msg_3.conn_idr]
 
+    # pylint: disable=redefined-builtin
     def get_responder_by_id(self, id):
         try:
             return self.responders[id]
         except KeyError:
             return None
 
+    @staticmethod
     def get_msg3_cidr(message_three: bytes):
         return MessageThree.decode(message_three)
 
@@ -121,4 +123,6 @@ class EdhocResource(resource.Resource):
             return aiocoap.Message(code=aiocoap.Code.CHANGED)
         else:
             del self.responders[request.token]
-            raise EdhocException(f"Illegal state: {self.resp.edhoc_state}")
+            raise EdhocException(
+                f"Illegal state: {self.responders[request.token].edhoc_state}"
+            )

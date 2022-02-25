@@ -11,8 +11,8 @@ from cryptography.hazmat.primitives import serialization
 from cose.curves import Ed25519
 from cose.keys import OKPKey, CoseKey
 from cose.keys.keyparam import KpKid
-from edhoc.roles.edhoc import CoseHeaderMap
 from cose.headers import KID
+from edhoc.roles.edhoc import CoseHeaderMap
 
 DEFAULT_AUTHKEY_FILENAME = "{}/.pepper/authkey.pem".format(os.path.expanduser("~"))
 DEFAULT_AUTHCRED_FILENAME = "{}/.pepper/authcred.pem".format(os.path.expanduser("~"))
@@ -73,9 +73,9 @@ def write_edhoc_credentials(
     """Write credentials to filename"""
     _create_parent_dir(authcred_file)
     _create_parent_dir(authkey_file)
-    with open(authcred_file, "w") as f:
+    with open(authcred_file, "w", encoding="utf-8") as f:
         f.write(pub_key_serialize_pem(authkey.public_key()))
-    with open(authkey_file, "w") as f:
+    with open(authkey_file, "w", encoding="utf-8") as f:
         f.write(priv_key_serialize_pem(authkey))
 
 
@@ -86,15 +86,15 @@ def parse_key(filename, private=True):
         raise ValueError("Key file provided doesn't exists: '{}'".format(filename))
 
     key = None
-    with open(filename, "r") as f:
+    with open(filename, "r", encoding="utf-8") as f:
         key = f.read().encode()
     try:
         if private:
             key = serialization.load_pem_private_key(key, None)
         else:
             key = serialization.load_pem_public_key(key, None)
-    except TypeError:
-        raise TypeError("Invalid Key in: '{}'".format(filename))
+    except TypeError as e:
+        raise TypeError(f"Invalid Key in: '{filename}'") from e
     if private:
         if isinstance(key, Ed25519PrivateKey):
             return key
@@ -153,10 +153,10 @@ def add_peer_cred(key, kid, filename=DEFAULT_PEER_CRED_FILENAME):
     cred = OKPKey.base64encode(cred.encode())
 
     if not os.path.exists(filename):
-        with open(filename, "w+") as f:
+        with open(filename, "w+", encoding="utf-8") as f:
             f.write(cred + "\n")
     else:
-        with open(filename, "r+") as f:
+        with open(filename, "r+", encoding="utf-8") as f:
             for line in f:
                 key = CoseKey.decode(OKPKey.base64decode(line.strip("\n")))
                 if kid == key.kid:
@@ -170,9 +170,9 @@ def rmv_peer_cred(kid, filename=DEFAULT_PEER_CRED_FILENAME):
     if not os.path.exists(filename):
         return True
     removed = False
-    with open(filename, "r") as f:
+    with open(filename, "r", encoding="utf-8") as f:
         lines = f.readlines()
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding="utf-8") as f:
         for line in lines:
             key = CoseKey.decode(OKPKey.base64decode(line.strip("\n")))
             if kid != key.kid:
@@ -185,7 +185,7 @@ def rmv_peer_cred(kid, filename=DEFAULT_PEER_CRED_FILENAME):
 def get_peer_cred(cred_id: CoseHeaderMap, filename=DEFAULT_PEER_CRED_FILENAME):
     """Look for the the credential matching the id in filename, kid are
     presumed to be unique"""
-    with open(filename, "r") as f:
+    with open(filename, "r", encoding="utf-8") as f:
         for line in f:
             key = CoseKey.decode(OKPKey.base64decode(line.strip("\n")))
             if cred_id[KID.identifier] == key.kid:

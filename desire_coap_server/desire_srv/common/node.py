@@ -1,9 +1,8 @@
 """Class for managed node."""
-
 from __future__ import annotations
-from desire_srv.coap.desire.payloads import ErtlPayload
 from typing import Callable, List, Union, Dict
 
+from desire_srv.coap.desire.payloads import ErtlPayload
 from desire_srv.security.crypto import CryptoCtx
 from desire_srv.common import SERVER_CTX_ID
 
@@ -16,7 +15,7 @@ class Node:
         self.ctx = CryptoCtx(SERVER_CTX_ID, self.ctx_id) if crypto_ctx else None
         self.infected = False
         self.exposed = False
-        self.ertl: List[ErtlPayload] = list()
+        self.ertl: List[ErtlPayload] = []
 
     def reset(self, reset_ertl=False):
         self.infected = False
@@ -41,13 +40,13 @@ class Node:
         self.ertl.remove(ertl)
 
     def get_etl(self):
-        etl = list()
+        etl = []
         for ertl in self.ertl:
             etl.extend([pet.pet.etl for pet in ertl.pets])
         return etl
 
     def get_rtl(self):
-        rtl = list()
+        rtl = []
         for ertl in self.ertl:
             rtl.extend([pet.pet.rtl for pet in ertl.pets])
         return rtl
@@ -102,7 +101,7 @@ class Nodes:
         return [node.uid for node in self.nodes if node.is_contact(rtl)]
 
     def resolve_contacts_dict(self, rtl: List[Union[str, bytes]]) -> Dict:
-        res = dict()
+        res ={}
         for token in rtl:
             contact_id = self.resolve_contacts([token])
             assert len(contact_id) <= 1, "PET match is grater than 2, impossible !?"

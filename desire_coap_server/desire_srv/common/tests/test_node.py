@@ -18,7 +18,7 @@ def testnode():
 def test_node_add_rmv_ertl(testnode):
     """Tests adding and removing rtl data to a Node"""
     assert not testnode.ertl
-    with open("static/ertl.json") as json_file:
+    with open("static/ertl.json", encoding="utf-8") as json_file:
         ertl = ErtlPayload.from_json_str("".join(json_file.readlines()))
     testnode.add_ertl(ertl)
     assert testnode.ertl
@@ -56,7 +56,7 @@ def test_node_get_rtl(testnode):
 
 def test_node_is_contact(testnode):
     """Test that contacts for an rtl are correctly returned"""
-    rtl = list()
+    rtl = []
     for _ in range(1, 5):
         ertl = ErtlPayload.rand(1)
         testnode.add_ertl(ertl)

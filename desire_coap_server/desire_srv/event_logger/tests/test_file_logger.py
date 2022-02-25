@@ -9,7 +9,7 @@ from desire_srv.event_logger.common import ErtlEvent, ExposureEvent, InfectionEv
 
 
 ERTL_TEST_DATA_PATH = "static/ertl.json"
-with open(ERTL_TEST_DATA_PATH) as f:
+with open(ERTL_TEST_DATA_PATH, encoding="utf-8") as f:
     ERTL_TEST_DATA_JSON = json.load(f)
 
 
@@ -27,7 +27,7 @@ def test_file_event_infection():
         assert not flog.is_connected()
 
         # parse log file
-        handle = open(flog.path, "r")
+        handle = open(flog.path, "r", encoding="utf-8")
         line = handle.readline()
         logged_infc_evt = InfectionEvent.from_influx_dict(json.loads(line))
         handle.close()
@@ -51,7 +51,7 @@ def test_file_event_exposure():
         assert not flog.is_connected()
 
         # parse log file
-        handle = open(flog.path, "r")
+        handle = open(flog.path, "r", encoding="utf-8")
         line = handle.readline()
         logged_exp_evt = ExposureEvent.from_influx_dict(json.loads(line))
         handle.close()
@@ -75,7 +75,7 @@ def test_file_event_ertl():
         assert not flog.is_connected()
 
         # parse log file
-        handle = open(flog.path, "r")
+        handle = open(flog.path, "r", encoding="utf-8")
         line = handle.readline()
         logged_ert_evt = ErtlEvent.from_influx_dict(json.loads(line))
         handle.close()
@@ -98,7 +98,7 @@ def test_file_event_ertl_influx():
         flog.disconnect()
         assert not flog.is_connected()
 
-        handle = open(flog.path, "r")
+        handle = open(flog.path, "r", encoding="utf-8")
         line = handle.readline()
         print(f"lines={line}")
         logged_ert_evt = ErtlEvent.from_influx_dict(json.loads(line))
