@@ -1,6 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Any, IO
-import os
 from urllib.parse import urlparse
 import requests
 from requests.status_codes import codes as http_codes
@@ -17,7 +15,7 @@ class HttpEventLogger(EventLogger):
         res = urlparse(self.uri)
         assert res.scheme == "http", "Invalid uri, must be http"
         assert res.path == "/telegraf"
-        ## check output format
+        # check output format
         assert (
             self.format == "json" or self.format == "influx"
         ), f"invalid format {self.format} must be json|influx"
@@ -29,7 +27,7 @@ class HttpEventLogger(EventLogger):
         pass
 
     def is_connected(self) -> bool:
-        # events are sent usin g POST, no connections
+        # events are sent using POST, no connections
         return False
 
     def log(self, data: DesireEvent) -> None:
@@ -44,7 +42,8 @@ class HttpEventLogger(EventLogger):
                 status_code = self._http_post_line_protocol(line)
                 if status_code != 204:
                     warnings.warn(
-                        f"Http post failed, returned {status_code}({http_codes[status_code]}) instead of 204",
+                        "Http post failed, returned "
+                        f"{status_code}({http_codes[status_code]}) instead of 204",
                         RuntimeWarning,
                     )
             except Exception as e:

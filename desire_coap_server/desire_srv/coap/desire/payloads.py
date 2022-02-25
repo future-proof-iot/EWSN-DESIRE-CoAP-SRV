@@ -1,7 +1,7 @@
 from __future__ import annotations
 import time
 from typing import List, Union
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 from cbor2.types import CBORTag
 from dacite import from_dict
 
@@ -389,7 +389,8 @@ def load_json_dump_cbor(cls, json_filename: str, gen_cbor_file=True):
         print(f"{cls.__name__} instance = {obj}")
         obj_cbor_bytes = obj.to_cbor_bytes()
         print(
-            f"{cls.__name__} instance [{len(obj_cbor_bytes)} bytes] as cbor tag (decode cbor on http://cbor.me/): \n{hex_dump(obj_cbor_bytes)}"
+            f"{cls.__name__} instance [{len(obj_cbor_bytes)} bytes] as cbor tag "
+            f"(decode cbor on http://cbor.me/): \n{hex_dump(obj_cbor_bytes)}"
         )
         assert cls.from_cbor_bytes(obj_cbor_bytes) == obj, "CBOR decoding failed"
         # write cbor bytes to file

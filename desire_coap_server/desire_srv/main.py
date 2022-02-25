@@ -12,7 +12,19 @@ from desire_srv.common import TEST_NODE_UID_0, TEST_NODE_UID_1
 from desire_srv.common.node import Node, Nodes
 from desire_srv.event_logger.file_logger import FileEventLogger
 from desire_srv.event_logger.http_logger import HttpEventLogger
-from desire_srv.event_logger.common import EventLogger, SilentLogger
+
+# request handler that logs to  http agent (telegraf)
+from desire_srv.event_logger.common import (
+    ErtlEvent,
+    EventLogger,
+    SilentLogger,
+    ExposureEvent,
+    InfectionEvent,
+    StatusEvent,
+    ResolvedEncouterEvent,
+    ResolvedEncouterData,
+)
+
 
 logging.basicConfig(level=logging.INFO, format="%(name)14s - %(message)s")
 LOG_LEVELS = ("debug", "info", "warning", "error", "fatal", "critical")
@@ -73,7 +85,7 @@ class UriArgType(object):
             return HttpEventLogger(uri, format)
         else:
             raise SystemError(
-                f"This is not supposed to happen: invalid scheme {res.scheme} in {uri}"
+                f"This should not to happen: invalid scheme {res.scheme} in {uri}"
             )
 
 
@@ -91,7 +103,8 @@ class DummyRqHandler(RqHandlerBase):
 
     def update_ertl(self, node: Node, ertl: ErtlPayload):
         LOGGER.debug(
-            f"[{self.__class__.__name__}] update_ertl: uid={node.uid}, ertl = {ertl}, json = \n{ertl.to_json_str()}"
+            f"[{self.__class__.__name__}] update_ertl: uid={node.uid}, "
+            f"ertl = {ertl}, json = \n{ertl.to_json_str()}"
         )
         etl = copy.deepcopy(ertl)
         for pet in etl.pets:
@@ -113,7 +126,8 @@ class DummyRqHandler(RqHandlerBase):
 
     def is_infected(self, node: Node) -> bool:
         LOGGER.debug(
-            f"[{self.__class__.__name__}] is_infected: uid={node.uid} infected={node.infected}"
+            f"[{self.__class__.__name__}] is_infected: uid={node.uid} "
+            f"infected={node.infected}"
         )
         return node.infected
 
@@ -135,19 +149,6 @@ class DummyRqHandler(RqHandlerBase):
         )
         node.exposed = status
         return None
-
-
-# request handler that logs to  http agent (telegraf)
-from desire_srv.event_logger.common import (
-    ErtlEvent,
-    EventLogger,
-    ExposureEvent,
-    InfectionEvent,
-    StatusEvent,
-    ResolvedEncouterEvent,
-    ResolvedEncouterData,
-)
-from desire_srv.event_logger.http_logger import HttpEventLogger
 
 
 class LoggingHandler(DummyRqHandler):
@@ -180,7 +181,8 @@ class LoggingHandler(DummyRqHandler):
             if rtl in contact_dict:
                 cid = contact_dict[rtl]
                 ed = node.get_encounter_data(etl, rtl)
-                # log resolved encounter event for this node node and symmetric for contact node
+                # log resolved encounter event for this node node and symmetric
+                # for contact node
                 evt = ResolvedEncouterEvent(
                     node_id=node.uid,
                     payload=ResolvedEncouterData(
@@ -191,7 +193,8 @@ class LoggingHandler(DummyRqHandler):
                 # log resolved encounter event for the contact node
                 contact_node = self.nodes.get_node(uid=cid)
                 ed = contact_node.get_encounter_data(etl=rtl, rtl=etl)  # mirror
-                # Gotcha: FIXME the epoch value is not saved, the event should log the epoch in the clock of the contact node
+                # Gotcha: FIXME the epoch value is not saved, the event should
+                # log the epoch in the clock of the contact node
                 evt = ResolvedEncouterEvent(
                     node_id=cid,
                     payload=ResolvedEncouterData(
@@ -222,7 +225,8 @@ class LoggingHandler(DummyRqHandler):
 
     def is_exposed(self, node: Node) -> bool:
         exposed = super().is_exposed(node)
-        # log node status: assuming at every epoch the node queries esr: this serves as a keep alive :)
+        # log node status: assuming at every epoch the node queries esr: this
+        # serves as a keep alive :)
         evt_payload = (
             StatusEvent.EXPOSED
             if exposed
@@ -251,7 +255,8 @@ def run(
         ]
     nodes = Nodes(nodes_list)
 
-    # Desire coap server instance , the rq_handler is the engine for handling post/get requests
+    # Desire coap server instance , the rq_handler is the engine for handling
+    # post/get requests
     event_logger.connect()
     LOGGER.info(f"event_logger={event_logger}")
     import atexit

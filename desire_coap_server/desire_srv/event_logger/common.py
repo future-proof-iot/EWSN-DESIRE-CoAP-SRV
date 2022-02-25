@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 import abc
-from dataclasses import Field, dataclass, field
+from dataclasses import dataclass, field
 from desire_srv.coap.desire.payloads import (
     ContactUWBData,
     EncounterData,
@@ -9,7 +9,7 @@ from desire_srv.coap.desire.payloads import (
     PetElement,
     Base64Encoder,
 )
-from typing import Any, ClassVar, Dict, List, Union
+from typing import Any, ClassVar, Dict, List
 import time
 import json
 from influxdb_client.client.write import point as influx_point
@@ -106,7 +106,7 @@ class InfectionEvent(DesireEvent):
 
     @property
     def infected(self) -> bool:
-        return self.payload == True
+        return self.payload is True
 
     def to_influx_dict(self) -> Dict:
         data = super().to_influx_dict()
@@ -140,7 +140,7 @@ class ExposureEvent(DesireEvent):
 
     @property
     def contact(self) -> bool:
-        return self.payload == True
+        return self.payload is True
 
     def to_influx_dict(self) -> Dict:
         data = super().to_influx_dict()
@@ -327,7 +327,7 @@ class ResolvedEncouterEvent(DesireEvent):
 
     @classmethod
     def from_influx_dict(cls, data: Dict) -> ResolvedEncouterEvent:
-        assert data["measurement"] == "rpets", f"Invalid measurement type in {datum}"
+        assert data["measurement"] == "rpets", f"Invalid measurement type in {data}"
         # tags
         _node_id = data["tags"]["node_id"]
         _contact_id = data["tags"]["contact_id"]

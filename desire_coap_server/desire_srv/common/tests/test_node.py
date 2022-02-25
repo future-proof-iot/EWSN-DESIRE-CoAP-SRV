@@ -2,11 +2,10 @@
 
 import dataclasses
 import pytest
-import random
 
 from desire_srv.common.node import Node, Nodes
 from desire_srv.common import TEST_NODE_UID_0
-from desire_srv.coap.desire.payloads import EncounterData, ErtlPayload, PetElement
+from desire_srv.coap.desire.payloads import ErtlPayload, PetElement
 
 
 @pytest.fixture(autouse=True)
@@ -107,7 +106,7 @@ def test_resolve_contacts():
 
     def _mirror_pet(pet: PetElement):
         ed = pet.pet
-        _ed = dataclasses.replace(ed)  #  clone
+        _ed = dataclasses.replace(ed)  # clone
         _ed.rtl = ed.etl
         _ed.etl = ed.rtl
         return PetElement(_ed)

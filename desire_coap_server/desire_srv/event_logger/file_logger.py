@@ -21,7 +21,7 @@ class FileEventLogger(EventLogger):
             assert os.access(
                 self.path, os.W_OK
             ), f"File {self.path} is not accessible for writing"
-        ## check output format
+        # check output format
         assert (
             self.format == "json" or self.format == "influx"
         ), f"invalid format {self.format} must be json|influx"

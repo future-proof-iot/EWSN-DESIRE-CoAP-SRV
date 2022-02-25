@@ -1,5 +1,3 @@
-from distutils.util import byte_compile
-import pytest
 from desire_srv.coap.desire.payloads import ContactUWBData, EncounterData, ErtlPayload
 
 

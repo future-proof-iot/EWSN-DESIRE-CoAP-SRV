@@ -1,14 +1,10 @@
 import os
-from sys import exec_prefix
 from typing import ByteString
-from desire_srv.security.crypto import CryptoCtx
 import subprocess
 import time
 import asyncio
 import pytest
-import pytest_asyncio.plugin
 
-import aiocoap
 from aiocoap.numbers import CONTENT, CHANGED
 from aiocoap import Context, Message, GET, POST
 
@@ -16,8 +12,6 @@ from cryptography.hazmat.primitives import serialization
 from cose.curves import Ed25519
 from cose.keys import OKPKey
 from cose.keys.keyparam import KpKid
-from edhoc.roles.edhoc import CoseHeaderMap
-from cose.headers import KID
 
 from desire_srv.common.node import Node
 from desire_srv.common import SERVER_CTX_ID, TEST_NODE_UID_0, TEST_NODE_UID_1
@@ -176,7 +170,7 @@ async def test_infected_JSON(event_loop, nodeFactory):
         infected_uri(testnode.uid), format=CONTENT_FORMAT_JSON
     )
     infected = InfectedPayload.from_json_str(testnode.ctx.decrypt(payload))
-    assert infected.infected == False
+    assert infected.infected is False
     infected.infected = True
     payload = testnode.ctx.encrypt(infected.to_json_str().encode())
     code, payload = await _coap_resource(
@@ -190,7 +184,7 @@ async def test_infected_JSON(event_loop, nodeFactory):
         infected_uri(testnode.uid), format=CONTENT_FORMAT_JSON
     )
     infected = InfectedPayload.from_json_str(testnode.ctx.decrypt(payload))
-    assert infected.infected == True
+    assert infected.infected is True
 
 
 @pytest.mark.asyncio
@@ -201,7 +195,7 @@ async def test_infected_CBOR(event_loop, nodeFactory):
         infected_uri(testnode.uid), format=CONTENT_FORMAT_CBOR
     )
     infected = InfectedPayload.from_cbor_bytes(testnode.ctx.decrypt(payload))
-    assert infected.infected == False
+    assert infected.infected is False
     infected.infected = True
     payload = testnode.ctx.encrypt(infected.to_cbor_bytes())
     code, payload = await _coap_resource(
@@ -215,7 +209,7 @@ async def test_infected_CBOR(event_loop, nodeFactory):
         infected_uri(testnode.uid), format=CONTENT_FORMAT_CBOR
     )
     infected = InfectedPayload.from_cbor_bytes(testnode.ctx.decrypt(payload))
-    assert infected.infected == True
+    assert infected.infected is True
 
 
 @pytest.mark.asyncio
@@ -226,7 +220,7 @@ async def test_esr_JSON(event_loop, nodeFactory):
         esr_uri(testnode.uid), format=CONTENT_FORMAT_JSON
     )
     exposed = EsrPayload.from_json_str(testnode.ctx.decrypt(payload))
-    assert exposed.contact == False
+    assert exposed.contact is False
     exposed.contact = True
     payload = testnode.ctx.encrypt(exposed.to_json_str().encode())
     code, payload = await _coap_resource(
@@ -237,7 +231,7 @@ async def test_esr_JSON(event_loop, nodeFactory):
         esr_uri(testnode.uid), format=CONTENT_FORMAT_JSON
     )
     exposed = EsrPayload.from_json_str(testnode.ctx.decrypt(payload))
-    assert exposed.contact == True
+    assert exposed.contact is True
 
 
 @pytest.mark.asyncio
@@ -248,7 +242,7 @@ async def test_esr_CBOR(event_loop, nodeFactory):
         esr_uri(testnode.uid), format=CONTENT_FORMAT_CBOR
     )
     exposed = EsrPayload.from_cbor_bytes(testnode.ctx.decrypt(payload))
-    assert exposed.contact == False
+    assert exposed.contact is False
     exposed.contact = True
     payload = testnode.ctx.encrypt(exposed.to_cbor_bytes())
     code, payload = await _coap_resource(
@@ -259,7 +253,7 @@ async def test_esr_CBOR(event_loop, nodeFactory):
         esr_uri(testnode.uid), format=CONTENT_FORMAT_CBOR
     )
     exposed = EsrPayload.from_cbor_bytes(testnode.ctx.decrypt(payload))
-    assert exposed.contact == True
+    assert exposed.contact is True
 
 
 @pytest.mark.asyncio
@@ -271,19 +265,6 @@ async def test_ertl_JSON(event_loop, nodeFactory):
     payload = testnode.ctx.encrypt(ertl.to_json_str().encode())
     code, payload = await _coap_resource(
         ertl_uri(testnode.uid), method=POST, payload=payload, format=CONTENT_FORMAT_JSON
-    )
-    assert code == CHANGED
-
-
-@pytest.mark.asyncio
-async def test_ertl_JSON(event_loop, nodeFactory):
-    testnode = await nodeFactory(TEST_NODE_UID_0)
-    assert testnode.has_crypto_ctx()
-    with open(f"{STATIC_FILES_DIR}/ertl.json") as json_file:
-        ertl = ErtlPayload.from_json_str("".join(json_file.readlines()))
-    payload = testnode.ctx.encrypt(ertl.to_cbor_bytes())
-    code, payload = await _coap_resource(
-        ertl_uri(testnode.uid), method=POST, payload=payload, format=CONTENT_FORMAT_CBOR
     )
     assert code == CHANGED
 
@@ -319,7 +300,7 @@ async def test_infected_notification(event_loop, nodeFactory):
         esr_uri(node_to_infect.uid), format=CONTENT_FORMAT_CBOR
     )
     exposed = EsrPayload.from_cbor_bytes(node_to_infect.ctx.decrypt(payload))
-    assert exposed.contact == False
+    assert exposed.contact is False
     exposed.contact = True
     # declare node infection
     infected = InfectedPayload(True)
@@ -335,7 +316,7 @@ async def test_infected_notification(event_loop, nodeFactory):
         esr_uri(node_to_infect.uid), format=CONTENT_FORMAT_CBOR
     )
     exposed = EsrPayload.from_cbor_bytes(node_to_infect.ctx.decrypt(payload))
-    assert exposed.contact == True
+    assert exposed.contact is True
 
 
 @pytest.mark.asyncio

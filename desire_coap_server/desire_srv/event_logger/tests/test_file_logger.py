@@ -1,11 +1,9 @@
-import pytest
 import json
 
 from dacite import from_dict
-from desire_srv.coap.desire.payloads import ErtlPayload, EsrPayload, InfectedPayload
 import os
 
-from desire_srv.coap.desire.payloads import ErtlPayload
+from desire_srv.coap.desire.payloads import ErtlPayload, EsrPayload, InfectedPayload
 from desire_srv.event_logger.file_logger import FileEventLogger
 from desire_srv.event_logger.common import ErtlEvent, ExposureEvent, InfectionEvent
 
