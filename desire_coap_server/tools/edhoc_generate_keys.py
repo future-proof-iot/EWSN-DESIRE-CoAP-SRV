@@ -8,31 +8,19 @@ Example
 -------
 python tools/edhoc_generate_keys.py
 """
-from cryptography.hazmat.primitives import serialization
+
 from desire_srv.security.edhoc_keys import (
-    generate_ed25519_priv_key,
+    generate_server_keys,
     priv_key_serialize_pem,
     pub_key_serialize_pem,
-    write_edhoc_credentials,
-    add_peer_cred,
-    rmv_peer_cred,
     DEFAULT_AUTHKEY_FILENAME,
     DEFAULT_AUTHCRED_FILENAME,
-    DEFAULT_SERVER_RPK_KID,
 )
 
 
 def main():
     """Main function."""
-    authkey = generate_ed25519_priv_key()
-    authcred = authkey.public_key()
-    write_edhoc_credentials(authkey)
-    rpk_bytes = authcred.public_bytes(
-        encoding=serialization.Encoding.Raw,
-        format=serialization.PublicFormat.Raw,
-    )
-    rmv_peer_cred(DEFAULT_SERVER_RPK_KID)
-    add_peer_cred(rpk_bytes, DEFAULT_SERVER_RPK_KID)
+    authkey, authcred = generate_server_keys()
     message = (
         "EDHOC credentials generation done:\n\n"
         "   - Authentication Key:  \t\n{}\n"

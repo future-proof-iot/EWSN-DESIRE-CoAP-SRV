@@ -9,7 +9,7 @@ import aiocoap.resource as resource
 from desire_srv.common import TEST_NODE_UID_0
 from desire_srv.common.node import Node, Nodes
 from desire_srv.coap.edhoc.responder import EdhocResource
-from desire_srv.security.edhoc_keys import get_edhoc_keys
+from desire_srv.security.edhoc_keys import generate_server_keys, get_edhoc_keys
 
 # argumentparser
 parser = argparse.ArgumentParser()
@@ -71,7 +71,11 @@ def main(uid_list, host: str = None, port: int = None):
         for uid in uid_list:
             NODES.nodes.append(Node(uid))
     # load keys
-    edhoc_key = get_edhoc_keys()
+    try:
+        edhoc_key = get_edhoc_keys()
+    except ValueError:
+        generate_server_keys()
+        edhoc_key = get_edhoc_keys()
     # resource tree creation
     root = resource.Site()
     root.add_resource(

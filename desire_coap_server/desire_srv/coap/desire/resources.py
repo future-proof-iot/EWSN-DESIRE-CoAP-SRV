@@ -12,7 +12,7 @@ from desire_srv.coap.desire.payloads import (
     EsrPayload,
     TimeOfDayPayload,
 )
-from desire_srv.security.edhoc_keys import get_edhoc_keys
+from desire_srv.security.edhoc_keys import generate_server_keys, get_edhoc_keys
 from desire_srv.coap.edhoc.responder import EdhocResource
 from desire_srv.common.node import Node, Nodes
 
@@ -368,7 +368,11 @@ class DesireCoapServer:
         # add edhoc resources if crypto is enabled
         if self.nodes.have_crypto():
             # load keys
-            edhoc_key = get_edhoc_keys()
+            try:
+                edhoc_key = get_edhoc_keys()
+            except ValueError:
+                generate_server_keys()
+                edhoc_key = get_edhoc_keys()
             self.__coap_root.add_resource(
                 (".well-known", "edhoc"),
                 EdhocResource(edhoc_key.authcred, edhoc_key.authkey, self.nodes),
