@@ -101,7 +101,7 @@ class Nodes:
         return [node.uid for node in self.nodes if node.is_contact(rtl)]
 
     def resolve_contacts_dict(self, rtl: List[Union[str, bytes]]) -> Dict:
-        res ={}
+        res = {}
         for token in rtl:
             contact_id = self.resolve_contacts([token])
             assert len(contact_id) <= 1, "PET match is grater than 2, impossible !?"

@@ -56,7 +56,7 @@ PARSER.add_argument(
 )
 
 
-class UriArgType():
+class UriArgType:
     VALID_SCHEMES = ("file", "http")
 
     def __call__(self, uri):
@@ -148,6 +148,7 @@ class DummyRqHandler(RqHandlerBase):
             f"[{self.__class__.__name__}] set_exposed: uid={node.uid} exposed={status}"
         )
         node.exposed = status
+
 
 # request handler that logs to  http agent (telegraf)
 class LoggingHandler(DummyRqHandler):

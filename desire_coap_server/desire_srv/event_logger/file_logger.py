@@ -22,7 +22,9 @@ class FileEventLogger(EventLogger):
                 self.path, os.W_OK
             ), f"File {self.path} is not accessible for writing"
         # check output format
-        assert (self.format in ('json', 'influx')
+        assert self.format in (
+            "json",
+            "influx",
         ), f"invalid format {self.format} must be json|influx"
 
     # pylint: disable=consider-using-with
