@@ -15,7 +15,11 @@ from cose.keys.keyparam import KpKid
 
 from desire_srv.common import SERVER_CTX_ID, TEST_NODE_UID_0
 import desire_srv.coap.edhoc.initiator as initiator
-from desire_srv.security.edhoc_keys import add_peer_cred, rmv_peer_cred, generate_ed25519_priv_key
+from desire_srv.security.edhoc_keys import (
+    add_peer_cred,
+    rmv_peer_cred,
+    generate_ed25519_priv_key,
+)
 
 dirname = os.path.dirname(__file__)
 EDHOC_SERVER_PATH = os.path.join(dirname, "../../../../tools/edhoc_server.py")

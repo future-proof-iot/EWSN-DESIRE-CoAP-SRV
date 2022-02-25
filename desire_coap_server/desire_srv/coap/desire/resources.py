@@ -54,7 +54,6 @@ class RqHandlerBase(ABC):
         pass
 
 
-
 # Coap resources
 class TimeOfDayResource(resource.Resource):
     def __init__(self):

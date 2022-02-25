@@ -23,7 +23,11 @@ from desire_srv.common.node import Node
 from desire_srv.common import SERVER_CTX_ID, TEST_NODE_UID_0, TEST_NODE_UID_1
 import desire_srv.coap.edhoc.initiator as initiator
 from desire_srv.security.crypto import CryptoCtx
-from desire_srv.security.edhoc_keys import add_peer_cred, rmv_peer_cred, generate_ed25519_priv_key
+from desire_srv.security.edhoc_keys import (
+    add_peer_cred,
+    rmv_peer_cred,
+    generate_ed25519_priv_key,
+)
 
 from desire_srv.coap.desire.payloads import (
     ErtlPayload,
