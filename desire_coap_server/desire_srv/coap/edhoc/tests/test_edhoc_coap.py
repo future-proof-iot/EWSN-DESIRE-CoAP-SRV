@@ -57,7 +57,7 @@ async def _coap_resource(url, method=GET, payload=b""):
     # pylint: disable=(broad-except)
     except Exception as e:
         code = "Failed to fetch resource"
-        payload = "{0}".format(e)
+        payload = f"{e}"
     else:
         code = response.code
         payload = response.payload

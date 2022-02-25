@@ -14,9 +14,9 @@ from cose.keys.keyparam import KpKid
 from cose.headers import KID
 from edhoc.roles.edhoc import CoseHeaderMap
 
-DEFAULT_AUTHKEY_FILENAME = "{}/.pepper/authkey.pem".format(os.path.expanduser("~"))
-DEFAULT_AUTHCRED_FILENAME = "{}/.pepper/authcred.pem".format(os.path.expanduser("~"))
-DEFAULT_PEER_CRED_FILENAME = "{}/.pepper/peercred".format(os.path.expanduser("~"))
+DEFAULT_AUTHKEY_FILENAME = f"{os.path.expanduser('~')}/.pepper/authkey.pem"
+DEFAULT_AUTHCRED_FILENAME = f"{os.path.expanduser('~')}/.pepper/authcred.pem"
+DEFAULT_PEER_CRED_FILENAME = f"{os.path.expanduser('~')}/.pepper/peercred"
 DEFAULT_SERVER_RPK_KID = b"PEPPER"
 Creds = namedtuple("Creds", ["authkey", "authcred"])
 
@@ -83,7 +83,7 @@ def parse_key(filename, private=True):
     """Returns a CoseKey object from file"""
     filename = os.path.expanduser(filename)
     if not os.path.isfile(filename):
-        raise ValueError("Key file provided doesn't exists: '{}'".format(filename))
+        raise ValueError(f"Key file provided doesn't exists: '{filename}'")
 
     key = None
     with open(filename, "r", encoding="utf-8") as f:
@@ -99,12 +99,12 @@ def parse_key(filename, private=True):
         if isinstance(key, Ed25519PrivateKey):
             return key
         else:
-            raise TypeError("Wrong key type in '{}'".format(filename))
+            raise TypeError(f"Wrong key type in '{filename}'")
     else:
         if isinstance(key, Ed25519PublicKey):
             return key
         else:
-            raise TypeError("Wrong key type in '{}'".format(filename))
+            raise TypeError(f"Wrong key type in '{filename}'")
 
 
 def parse_edhoc_authcred_file(filename=DEFAULT_AUTHCRED_FILENAME):

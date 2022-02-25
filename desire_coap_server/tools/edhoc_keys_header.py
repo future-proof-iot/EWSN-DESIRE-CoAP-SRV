@@ -74,7 +74,7 @@ class KeyHeaderConfig:
 def bytestring_to_c_array(data: ByteString) -> str:
     """Receives a ByteString and returns a C array for that ByteString"""
     return "    " + "\n    ".join(
-        textwrap.wrap(", ".join(["{:0=#4x}".format(x) for x in data]), 76)
+        textwrap.wrap(", ".join([f"{x:0=#4x}" for x in data]), 76)
     )
 
 
