@@ -10,7 +10,7 @@ from edhoc.roles.initiator import Initiator
 
 from cose.headers import KID
 
-import security.edhoc_keys as auth
+import desire_srv.security.edhoc_keys as auth
 
 logger = logging.getLogger("coap.edhoc")
 

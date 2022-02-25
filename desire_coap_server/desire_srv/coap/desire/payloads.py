@@ -7,7 +7,6 @@ from dacite import from_dict
 
 import json
 import cbor2
-from binascii import hexlify
 
 import random
 import os

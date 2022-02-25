@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives import serialization
 from cose.keys import OKPKey
 from cose.headers import KID
 
-import security.edhoc_keys as edhoc_keys
+import desire_srv.security.edhoc_keys as edhoc_keys
 
 
 RSA_PEM_KEY = """

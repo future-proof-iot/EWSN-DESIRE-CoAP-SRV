@@ -1,5 +1,5 @@
 import os
-from security.crypto import CryptoCtx
+from desire_srv.security.crypto import CryptoCtx
 import subprocess
 import time
 import asyncio
@@ -13,12 +13,12 @@ from cose.curves import Ed25519
 from cose.keys import OKPKey
 from cose.keys.keyparam import KpKid
 
-from common import SERVER_CTX_ID, TEST_NODE_UID_0
-import edhoc_coap.initiator as initiator
-from security.edhoc_keys import add_peer_cred, rmv_peer_cred, generate_ed25519_priv_key
+from desire_srv.common import SERVER_CTX_ID, TEST_NODE_UID_0
+import desire_srv.coap.edhoc.initiator as initiator
+from desire_srv.security.edhoc_keys import add_peer_cred, rmv_peer_cred, generate_ed25519_priv_key
 
 dirname = os.path.dirname(__file__)
-EDHOC_SERVER_PATH = os.path.join(dirname, "../../tools/edhoc_server.py")
+EDHOC_SERVER_PATH = os.path.join(dirname, "../../../../tools/edhoc_server.py")
 EDHOC_SERVER_HOST = "127.0.0.1"
 EDHOC_RESPONDER_EP = f"coap://{EDHOC_SERVER_HOST}:5683"
 
@@ -36,11 +36,11 @@ def event_loop():
         res._close()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def responder(request):
     cmd = ["python", EDHOC_SERVER_PATH, f"--host={EDHOC_SERVER_HOST}"]
     proc = subprocess.Popen(cmd)
-    time.sleep(1)
+    time.sleep(2)
     request.addfinalizer(proc.kill)
 
 

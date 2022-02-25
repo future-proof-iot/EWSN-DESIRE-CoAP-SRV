@@ -10,16 +10,16 @@ import aiocoap
 from typing import List
 from dataclasses import dataclass, field
 
-from desire_coap.payloads import (
+from desire_srv.coap.desire.payloads import (
     ErtlPayload,
     InfectedPayload,
     EsrPayload,
     TimeOfDayPayload,
 )
 
-from security.edhoc_keys import get_edhoc_keys
-from edhoc_coap.responder import EdhocResource
-from common.node import Node, Nodes
+from desire_srv.security.edhoc_keys import get_edhoc_keys
+from desire_srv.coap.edhoc.responder import EdhocResource
+from desire_srv.common.node import Node, Nodes
 
 # Coap Request handler to whom we formward the requests
 
@@ -52,6 +52,7 @@ class RqHandlerBase(ABC):
     @abstractmethod
     def set_exposed(self, node: Node, status: bool) -> None:
         pass
+
 
 
 # Coap resources
@@ -113,6 +114,10 @@ class NodeResource(resource.Resource):
         if self.node.has_crypto_ctx():
             return self.node.ctx.encrypt(payload)
         return payload
+
+    def reset(self):
+        """Reset node information"""
+        self.node.reset()
 
 
 class ErtlResource(NodeResource):
@@ -251,6 +256,31 @@ class InfectedResource(NodeResource):
         return rsp
 
 
+class ResetResource(NodeResource):
+    async def render_post(self, request: aiocoap.message.Message):
+        rsp = aiocoap.Message(
+            mtype=request.mtype, code=aiocoap.numbers.codes.Code.CHANGED
+        )
+        content_format = request.opt.content_format
+        try:
+            if content_format == aiocoap.numbers.media_types_rev["application/text"]:
+                self.reset()
+                rsp.opt.content_format = content_format
+            else:
+                # unsupported payload format
+                rsp = aiocoap.Message(
+                    mtype=request.mtype,
+                    code=aiocoap.numbers.codes.Code.UNSUPPORTED_CONTENT_FORMAT,
+                )
+        except Exception as e:
+            rsp = aiocoap.Message(
+                mtype=request.mtype,
+                code=aiocoap.numbers.codes.Code.INTERNAL_SERVER_ERROR,
+            )
+
+        return rsp
+
+
 class EsrResource(NodeResource):
     async def render_get(self, request):
         exposed_payload = EsrPayload(self.handler.is_exposed(self.node))
@@ -355,6 +385,9 @@ class DesireCoapServer:
             )
             self.__coap_root.add_resource(
                 [node.uid, "esr"], EsrResource(node=node, handler=self.rq_handler)
+            )
+            self.__coap_root.add_resource(
+                [node.uid, "reset"], ResetResource(node=node, handler=self.rq_handler)
             )
         self.__coap_root.add_resource(["time"], TimeOfDayResource())
 

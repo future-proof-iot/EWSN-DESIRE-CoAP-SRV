@@ -1,6 +1,6 @@
 from distutils.util import byte_compile
 import pytest
-from desire_coap.payloads import ContactUWBData, EncounterData, ErtlPayload
+from desire_srv.coap.desire.payloads import ContactUWBData, EncounterData, ErtlPayload
 
 
 def test_ContactUWBData():

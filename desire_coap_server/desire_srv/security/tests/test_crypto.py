@@ -1,6 +1,6 @@
 """pyaiot crypto test module."""
 
-from security.crypto import CryptoCtx
+from desire_srv.security.crypto import CryptoCtx
 
 ALICE_ID = b"\xcc\xd1"
 BOB_ID = b"\xac\xe2"

@@ -9,7 +9,7 @@ Example
 python tools/edhoc_generate_keys.py
 """
 from cryptography.hazmat.primitives import serialization
-from security.edhoc_keys import (
+from desire_srv.security.edhoc_keys import (
     generate_ed25519_priv_key,
     priv_key_serialize_pem,
     pub_key_serialize_pem,

@@ -1,7 +1,7 @@
 import os
 from sys import exec_prefix
 from typing import ByteString
-from security.crypto import CryptoCtx
+from desire_srv.security.crypto import CryptoCtx
 import subprocess
 import time
 import asyncio
@@ -19,13 +19,13 @@ from cose.keys.keyparam import KpKid
 from edhoc.roles.edhoc import CoseHeaderMap
 from cose.headers import KID
 
-from common.node import Node
-from common import SERVER_CTX_ID, TEST_NODE_UID_0, TEST_NODE_UID_1
-import edhoc_coap.initiator as initiator
-from security.crypto import CryptoCtx
-from security.edhoc_keys import add_peer_cred, rmv_peer_cred, generate_ed25519_priv_key
+from desire_srv.common.node import Node
+from desire_srv.common import SERVER_CTX_ID, TEST_NODE_UID_0, TEST_NODE_UID_1
+import desire_srv.coap.edhoc.initiator as initiator
+from desire_srv.security.crypto import CryptoCtx
+from desire_srv.security.edhoc_keys import add_peer_cred, rmv_peer_cred, generate_ed25519_priv_key
 
-from desire_coap.payloads import (
+from desire_srv.coap.desire.payloads import (
     ErtlPayload,
     InfectedPayload,
     EsrPayload,
@@ -33,10 +33,10 @@ from desire_coap.payloads import (
 )
 
 dirname = os.path.dirname(__file__)
-STATIC_FILES_DIR = os.path.join(dirname, "../../static")
+STATIC_FILES_DIR = os.path.join(dirname, "../../../../static")
 DESIRE_SERVER_HOST = "127.0.0.1"
 DESIRE_SERVER_PORT = 5683
-DESIRE_SERVER_PATH = os.path.join(dirname, "../../desire_coap_srv.py")
+DESIRE_SERVER_PATH = os.path.join(dirname, "../../../main.py")
 DESIRE_COAP_EP = f"coap://{DESIRE_SERVER_HOST}:{DESIRE_SERVER_PORT}"
 
 TEST_NODE_INFECTED_EP = f"{DESIRE_COAP_EP}/{TEST_NODE_UID_0}/infected"
@@ -61,6 +61,10 @@ def ertl_uri(uid):
     return f"{DESIRE_COAP_EP}/{uid}/ertl"
 
 
+def reset_uri(uid):
+    return f"{DESIRE_COAP_EP}/{uid}/reset"
+
+
 def time_uri():
     return f"{DESIRE_COAP_EP}/time"
 
@@ -78,8 +82,8 @@ def event_loop():
         res._close()
 
 
-@pytest.fixture(autouse=True)
-def desire(request):
+@pytest.fixture(scope="module", autouse=True)
+def desire_server(request):
     cmd = [
         "python",
         DESIRE_SERVER_PATH,
@@ -87,16 +91,17 @@ def desire(request):
         f"--port={DESIRE_SERVER_PORT}",
     ]
     proc = subprocess.Popen(cmd)
-    # TODO: this will depend on the system is my guess, and ports might
-    # collide
     time.sleep(2)
     request.addfinalizer(proc.kill)
 
 
 @pytest.fixture
 @pytest.mark.asyncio
-async def nodeFactory(event_loop, desire):
+async def nodeFactory(event_loop, desire_server):
     async def test_node(uid: str) -> Node:
+        await _coap_resource(
+            reset_uri(uid), method=POST, payload="", format=CONTENT_FORMAT_TEXT
+        )
         authcred, authkey = credentials(uid.encode())
         salt, secret = await initiator.handshake(DESIRE_SERVER_HOST, authcred, authkey)
         node = Node(uid)

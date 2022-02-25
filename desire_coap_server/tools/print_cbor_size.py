@@ -1,7 +1,7 @@
 from binascii import hexlify
 import sys
 
-from desire_coap.payloads import ErtlPayload
+from desire_srv.coap.desire.payloads import ErtlPayload
 
 
 if __name__ == "__main__":

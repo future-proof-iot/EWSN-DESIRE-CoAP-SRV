@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 import abc
 from dataclasses import Field, dataclass, field
-from desire_coap.payloads import (
+from desire_srv.coap.desire.payloads import (
     ContactUWBData,
     EncounterData,
     ErtlPayload,

@@ -6,10 +6,10 @@ import asyncio
 import aiocoap
 import aiocoap.resource as resource
 
-from common import TEST_NODE_UID_0
-from common.node import Node, Nodes
-from edhoc_coap.responder import EdhocResource
-from security.edhoc_keys import get_edhoc_keys
+from desire_srv.common import TEST_NODE_UID_0
+from desire_srv.common.node import Node, Nodes
+from desire_srv.coap.edhoc.responder import EdhocResource
+from desire_srv.security.edhoc_keys import get_edhoc_keys
 
 # argumentparser
 parser = argparse.ArgumentParser()

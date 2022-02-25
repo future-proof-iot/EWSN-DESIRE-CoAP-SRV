@@ -33,7 +33,7 @@ import cbor2
 from cose.headers import KID
 from jinja2 import Environment, FileSystemLoader
 
-from security.edhoc_keys import (
+from desire_srv.security.edhoc_keys import (
     generate_edhoc_keys,
     add_peer_cred,
     get_edhoc_keys,

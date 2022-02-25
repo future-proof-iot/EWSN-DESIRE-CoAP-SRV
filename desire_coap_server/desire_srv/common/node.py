@@ -1,11 +1,11 @@
 """Class for managed node."""
 
 from __future__ import annotations
-from desire_coap.payloads import ErtlPayload
+from desire_srv.coap.desire.payloads import ErtlPayload
 from typing import Callable, List, Union, Dict
 
-from security.crypto import CryptoCtx
-from common import SERVER_CTX_ID
+from desire_srv.security.crypto import CryptoCtx
+from desire_srv.common import SERVER_CTX_ID
 
 
 class Node:

@@ -15,8 +15,8 @@ from edhoc.roles.responder import Responder
 
 from cose.headers import KID
 
-from common.node import Nodes
-import security.edhoc_keys as auth
+from desire_srv.common.node import Nodes
+import desire_srv.security.edhoc_keys as auth
 
 logger = logging.getLogger("edhoc.coap")
 

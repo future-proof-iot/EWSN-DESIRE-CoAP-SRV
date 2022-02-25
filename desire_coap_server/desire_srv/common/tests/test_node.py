@@ -4,9 +4,9 @@ import dataclasses
 import pytest
 import random
 
-from common.node import Node, Nodes
-from common import TEST_NODE_UID_0
-from desire_coap.payloads import EncounterData, ErtlPayload, PetElement
+from desire_srv.common.node import Node, Nodes
+from desire_srv.common import TEST_NODE_UID_0
+from desire_srv.coap.desire.payloads import EncounterData, ErtlPayload, PetElement
 
 
 @pytest.fixture(autouse=True)

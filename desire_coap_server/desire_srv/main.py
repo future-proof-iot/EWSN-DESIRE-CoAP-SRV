@@ -1,44 +1,43 @@
 #!/usr/bin/env python3
-import os
 from urllib.parse import urlparse
 import argparse
 import logging
 import copy
 from typing import List, Union
 
-from desire_coap.resources import ErtlPayload
-from desire_coap.resources import DesireCoapServer, RqHandlerBase
+from desire_srv.coap.desire.resources import ErtlPayload
+from desire_srv.coap.desire.resources import DesireCoapServer, RqHandlerBase
 
-from common import TEST_NODE_UID_0, TEST_NODE_UID_1
-from common.node import Node, Nodes
-from event_logger.file_logger import FileEventLogger
-from event_logger.http_logger import HttpEventLogger
-from event_logger.common import EventLogger, SilentLogger
+from desire_srv.common import TEST_NODE_UID_0, TEST_NODE_UID_1
+from desire_srv.common.node import Node, Nodes
+from desire_srv.event_logger.file_logger import FileEventLogger
+from desire_srv.event_logger.http_logger import HttpEventLogger
+from desire_srv.event_logger.common import EventLogger, SilentLogger
 
 logging.basicConfig(level=logging.INFO, format="%(name)14s - %(message)s")
 LOG_LEVELS = ("debug", "info", "warning", "error", "fatal", "critical")
 LOGGER = logging.getLogger("coap-server")
 
 # argumentparser
-parser = argparse.ArgumentParser()
-parser.add_argument(
+PARSER = argparse.ArgumentParser()
+PARSER.add_argument(
     "--node-uid",
     type=str,
     nargs="+",
     help="UIDs of enrolled nodes, must match stored CRED_ID",
 )
-parser.add_argument("--port", type=int, default=5683, help="The CoAP PORT")
-parser.add_argument("--host", type=str, default=None, help="The CoAP host interface")
-parser.add_argument(
+PARSER.add_argument("--port", type=int, default=5683, help="The CoAP PORT")
+PARSER.add_argument("--host", type=str, default=None, help="The CoAP host interface")
+PARSER.add_argument(
     "--loglevel", choices=LOG_LEVELS, default="info", help="Python logger log level"
 )
-parser.add_argument(
+PARSER.add_argument(
     "--edhoc",
     default=True,
     action="store_true",
     help="Enable edhoc resource for encryption/decryption",
 )
-parser.add_argument(
+PARSER.add_argument(
     "--no-edhoc",
     dest="edhoc",
     action="store_false",
@@ -78,7 +77,7 @@ class UriArgType(object):
             )
 
 
-parser.add_argument(
+PARSER.add_argument(
     "--event-log",
     type=UriArgType(),
     default=None,
@@ -139,7 +138,7 @@ class DummyRqHandler(RqHandlerBase):
 
 
 # request handler that logs to  http agent (telegraf)
-from event_logger.common import (
+from desire_srv.event_logger.common import (
     ErtlEvent,
     EventLogger,
     ExposureEvent,
@@ -148,7 +147,7 @@ from event_logger.common import (
     ResolvedEncouterEvent,
     ResolvedEncouterData,
 )
-from event_logger.http_logger import HttpEventLogger
+from desire_srv.event_logger.http_logger import HttpEventLogger
 
 
 class LoggingHandler(DummyRqHandler):
@@ -235,10 +234,7 @@ class LoggingHandler(DummyRqHandler):
         return exposed
 
 
-# logging setup
-
-
-def main(
+def run(
     uid_list: List[str],
     host: str,
     port: int,
@@ -246,14 +242,13 @@ def main(
     edhoc_crypto: bool,
 ):
     # Create node list with default test node
-    nodes_list = (
-        [Node(uid, crypto_ctx=edhoc_crypto) for uid in uid_list]
-        if uid_list
-        else [
+    if uid_list:
+        nodes_list = [Node(uid, crypto_ctx=edhoc_crypto) for uid in uid_list]
+    else:
+        nodes_list = [
             Node(TEST_NODE_UID_0, crypto_ctx=edhoc_crypto),
             Node(TEST_NODE_UID_1, crypto_ctx=edhoc_crypto),
         ]
-    )
     nodes = Nodes(nodes_list)
 
     # Desire coap server instance , the rq_handler is the engine for handling post/get requests
@@ -269,14 +264,12 @@ def main(
     coap_server.run()
 
 
-if __name__ == "__main__":
-    args = parser.parse_args()
-    # setup logger
+def main(args=None):
+    args = PARSER.parse_args()
     if args.loglevel:
         loglevel = logging.getLevelName(args.loglevel.upper())
         LOGGER.setLevel(loglevel)
-
-    main(
+    run(
         args.node_uid,
         host=args.host,
         port=args.port,
@@ -285,3 +278,7 @@ if __name__ == "__main__":
         ),
         edhoc_crypto=args.edhoc,
     )
+
+
+if __name__ == "__main__":
+    main()
