@@ -192,3 +192,19 @@ def get_peer_cred(cred_id: CoseHeaderMap, filename=DEFAULT_PEER_CRED_FILENAME):
                 # key.crv = X25519
                 return key
     return None
+
+
+def generate_server_keys():
+    """Generates and stores keys for EDHOC SIGN_SIGN key exchange using
+    CipherSuite0 and stores them under ~/.pepper/*"""
+    authkey = generate_ed25519_priv_key()
+    write_edhoc_credentials(authkey)
+    # This is done only so test nodes can verify it as a nieghbot
+    authcred = authkey.public_key()
+    rpk_bytes = authcred.public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
+    rmv_peer_cred(DEFAULT_SERVER_RPK_KID)
+    add_peer_cred(rpk_bytes, DEFAULT_SERVER_RPK_KID)
+    return authkey, authcred

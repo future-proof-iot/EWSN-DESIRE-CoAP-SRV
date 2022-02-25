@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup, find_packages
 from desire_srv import VERSION, PACKAGE_NAME
-import desire_srv
+
 
 # Cannot create this list with pip.req.parse_requirements() because it requires
 # the pwd module, which is Unix only.
