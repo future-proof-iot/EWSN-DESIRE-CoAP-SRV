@@ -15,14 +15,11 @@ build:
 
 up:
 	@echo 'Powering up the containers'
-	echo '' > volumes/telegraf/metrics.out
 	${DOCKER_COMPOSE} up -d
-
 
 down:
 	@echo 'Powering down the containers'
 	${DOCKER_COMPOSE} down --volumes
-	rm -f volumes/telegraf/metrics.out
 
 status:
 	@echo 'Docker compose status:'

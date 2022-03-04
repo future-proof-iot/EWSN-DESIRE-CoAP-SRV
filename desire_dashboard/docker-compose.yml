@@ -33,7 +33,7 @@ services:
       - 8080:8080
     volumes:
       - ./volumes/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
-      - ./volumes/telegraf/metrics.out:/tmp/telegraf/metrics.out
+      - ./volumes/telegraf/log:/tmp/telegraf/log/
 
   # Database
   influxdb:
