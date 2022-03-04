@@ -1,4 +1,12 @@
 version: "3.8"
+
+x-logging:
+  &default-logging
+  driver: "json-file"
+  options:
+    max-file: "5"
+    max-size: "10m"
+
 services:
   # Coap server service
   coap_srv:
@@ -19,6 +27,7 @@ services:
       - type: bind
         source: ${CREDENTIALS_FOLDER_PATH}
         target: /root/.pepper
+    logging: *default-logging
 
   # Agent for collecting data
   telegraf:
@@ -34,6 +43,7 @@ services:
     volumes:
       - ./volumes/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - ./volumes/telegraf/log:/tmp/telegraf/log/
+    logging: *default-logging
 
   # Database
   influxdb:
@@ -58,6 +68,7 @@ services:
       - ./volumes/influxdb/data:/var/lib/influxdb2
       - ./volumes/influxdb/config:/etc/influxdb2
       - ./volumes/influxdb/scripts:/docker-entrypoint-initdb.d
+    logging: *default-logging
 
   # Dashboard
   grafana:
@@ -77,4 +88,5 @@ services:
     volumes:
       - ./volumes/grafana/data:/var/lib/grafana
       - ./volumes/grafana/config/provisioning/:/usr/share/grafana/conf/provisioning
+    logging: *default-logging
 
