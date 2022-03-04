@@ -8,6 +8,25 @@ x-logging:
     max-size: "10m"
 
 services:
+  # Coap server service
+  coap_srv:
+    image: ${DOCKER_REGISTRY}/desire-coap-server:latest
+    container_name: coap-server
+    depends_on:
+      - telegraf
+    restart: always
+    tty: true
+    environment:
+      - COAP_HOST
+      - COAP_PORT
+      - EVENT_LOG
+      - PROV_NODES
+    ports:
+      - 5683:5683/udp
+    volumes:
+      - credentials:/root/.pepper
+    logging: *default-logging
+
   # Agent for collecting data
   telegraf:
     image: telegraf:1.20.0
@@ -70,6 +89,12 @@ services:
     logging: *default-logging
 
 volumes:
+  credentials:
+      driver: local
+      driver_opts:
+        type: "local"
+        o: bind,uid=${UUID},gid=${GID}
+        device: ${CREDENTIALS_FOLDER_PATH}
   influxdb-data:
       driver: local
       driver_opts:
