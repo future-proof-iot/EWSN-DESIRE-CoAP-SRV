@@ -24,9 +24,7 @@ services:
     ports:
       - 5683:5683/udp
     volumes:
-      - type: bind
-        source: ${CREDENTIALS_FOLDER_PATH}
-        target: /root/.pepper
+      - credentials:/root/.pepper
     logging: *default-logging
 
   # Agent for collecting data
@@ -41,7 +39,7 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./volumes/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./volumes/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
       - ./volumes/telegraf/log:/tmp/telegraf/log/
     logging: *default-logging
 
@@ -65,8 +63,8 @@ services:
       - "8086:8086"
     restart: always
     volumes:
-      - ./volumes/influxdb/data:/var/lib/influxdb2
-      - ./volumes/influxdb/config:/etc/influxdb2
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
       - ./volumes/influxdb/scripts:/docker-entrypoint-initdb.d
     logging: *default-logging
 
@@ -90,3 +88,22 @@ services:
       - ./volumes/grafana/config/provisioning/:/usr/share/grafana/conf/provisioning
     logging: *default-logging
 
+volumes:
+  credentials:
+      driver: local
+      driver_opts:
+        type: "local"
+        o: bind,uid=${UUID},gid=${GID}
+        device: ${CREDENTIALS_FOLDER_PATH}
+  influxdb-data:
+      driver: local
+      driver_opts:
+        type: "local"
+        o: bind,uid=${UUID},gid=${GID}
+        device: ${PWD}/volumes/influxdb/data
+  influxdb-config:
+      driver: local
+      driver_opts:
+        type: "local"
+        o: bind,uid=${UUID},gid=${GID}
+        device: ${PWD}/volumes/influxdb/config
