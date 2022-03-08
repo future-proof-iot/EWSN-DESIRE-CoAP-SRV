@@ -11,6 +11,7 @@ stages:
   - static-analysis
   - formatting
   - test
+  - docker
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
@@ -65,3 +66,30 @@ tox-test:
     paths:
         - ./desire_coap_server/test-report.xml
     expire_in: 4 week
+
+docker-build:
+  only:
+    - master
+  stage: docker
+  variables:
+    DOCKER_DRIVER: overlay2
+    BUILDX_VERSION: "v0.6.1"
+    BUILDX_ARCH: "linux-amd64"
+  services:
+    - docker:20.10.8-dind
+  image: docker:20.10.8
+  before_script:
+    - echo "$CI_DOCKERHUB_PASSWORD" | docker login --username "$CI_DOCKERHUB_USER" --password-stdin
+    - wget -O /usr/bin/docker-buildx
+      https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.${BUILDX_ARCH}
+    - chmod +x /usr/bin/docker-buildx
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+  script:
+    - if [ -z "$CI_COMMIT_TAG" ]; then IMAGE_TAG="latest"; else IMAGE_TAG="$CI_COMMIT_TAG"; fi
+    - docker-buildx create --use
+    - docker-buildx build
+      --platform linux/amd64,linux/arm64/v8
+      --tag "$CI_DOCKERHUB_REGISTRY"/"$CI_DOCKERHUB_COAP_SERVER_IMAGE":"$IMAGE_TAG"
+      --push
+      -f desire_coap_server/docker/Dockerfile
+      .
