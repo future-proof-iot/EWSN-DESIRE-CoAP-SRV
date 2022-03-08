@@ -1,7 +1,7 @@
 from binascii import hexlify
 import sys
 
-from desire_coap.payloads import ErtlPayload
+from desire_srv.coap.desire.payloads import ErtlPayload
 
 
 if __name__ == "__main__":
@@ -16,5 +16,6 @@ if __name__ == "__main__":
     print(ertl)
     print(ertl.to_json_str())
     print(
-        f"cbor packet length = {len(ert_cbor_bytes)}\n{hexlify(ert_cbor_bytes).decode().upper()}"
+        "cbor packet length = "
+        f"{len(ert_cbor_bytes)}\n{hexlify(ert_cbor_bytes).decode().upper()}"
     )

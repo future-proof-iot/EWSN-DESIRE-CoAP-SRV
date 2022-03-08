@@ -4,7 +4,7 @@ import os
 
 if __name__ == "__main__":
     assert len(sys.argv) > 1, print("CBOR binary file must be passed as argument")
-    with open(sys.argv[1], "rb") as f:
+    with open(sys.argv[1], "rb", encoding="utf-8") as f:
         line = b"".join(f.readlines())
         hex_line = hexlify(line).decode()
         print(f"line [len = {len(line)} bytes] = {hex_line}")

@@ -26,14 +26,13 @@ import argparse
 import base64
 import os
 import textwrap
-from dataclasses import dataclass, asdict
 from typing import ByteString, Dict
-
+from dataclasses import dataclass, asdict
 import cbor2
-from cose.headers import KID
 from jinja2 import Environment, FileSystemLoader
+from cose.headers import KID
 
-from security.edhoc_keys import (
+from desire_srv.security.edhoc_keys import (
     generate_edhoc_keys,
     add_peer_cred,
     get_edhoc_keys,
@@ -75,7 +74,7 @@ class KeyHeaderConfig:
 def bytestring_to_c_array(data: ByteString) -> str:
     """Receives a ByteString and returns a C array for that ByteString"""
     return "    " + "\n    ".join(
-        textwrap.wrap(", ".join(["{:0=#4x}".format(x) for x in data]), 76)
+        textwrap.wrap(", ".join([f"{x:0=#4x}" for x in data]), 76)
     )
 
 
@@ -104,7 +103,7 @@ def keys_header(out_dir: str, kid: ByteString = None, add_cred: bool = False):
     header = template.render(config, zip=zip)
 
     dest = os.path.join(out_dir, f'{config["name"]}_{KEYS_FILE_NAME}')
-    with open(dest, "w+") as _file:
+    with open(dest, "w+", encoding="utf-8") as _file:
         _file.write(header)
 
     if add_cred:

@@ -1,3 +1,9 @@
+.only-default: &only-default
+  only:
+    - master
+    - merge_requests
+    - tags
+
 default:
   image: python:3.8.12
 
@@ -5,11 +11,9 @@ stages:
   - static-analysis
   - formatting
   - test
-  #- doc
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
-  DESIRE_COAP_SERVER_PATH: "$CI_PROJECT_DIR/desire_coap_server"
 
 cache:
   paths:
@@ -20,43 +24,44 @@ before_script:
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
-  - pip install pylint pylint-exit anybadge black
-  - pip install -r $DESIRE_COAP_SERVER_PATH/requirements.txt 
-  - pip install -r $DESIRE_COAP_SERVER_PATH/test_requirements.txt 
+  - pip install tox pylint-exit anybadge
 
 pylint:
   stage: static-analysis
   needs: []
   allow_failure: true
   script:
+    - cd desire_coap_server
     - mkdir ./pylint
-    - pylint --output-format=text desire_coap_server/ | tee ./pylint/pylint.log || pylint-exit $?
+    - tox -e lint | tee ./pylint/pylint.log || pylint-exit $?
     - PYLINT_SCORE=$(sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' ./pylint/pylint.log)
     - anybadge --label=Pylint --file=pylint/pylint.svg --value=$PYLINT_SCORE 2=red 4=orange 8=yellow 10=green
     - echo "Pylint score is $PYLINT_SCORE"
   artifacts:
     paths:
-      - ./pylint/
+      - ./desire_coap_server/pylint/
 
 black:
   stage: formatting
-  needs: []
-  allow_failure: true
   script:
+    - cd desire_coap_server
     - mkdir ./black
-    - black desire_coap_server --check && BLACK_STATUS=0 || BLACK_STATUS=$?
+    - tox -e black && BLACK_STATUS=0 || BLACK_STATUS=$?
     - anybadge --label=Black --color red --value=$BLACK_STATUS --file=./black/black.svg 1=green
     - echo "Black status is $BLACK_STATUS"
   artifacts:
     paths:
-      - ./black/
+      - ./desire_coap_server/black/
 
-pytest:
+tox-test:
   stage: test
-  needs: []
   script:
-    - cd $DESIRE_COAP_SERVER_PATH
-    - pip freeze
-    - PYTHONPATH=$PYTHONPATH:. python tools/edhoc_generate_keys.py
-    - PYTHONPATH=$PYTHONPATH:. pytest -x --cov=. -vvv
-    #- PYTHONPATH=$PYTHONPATH:. pytest -x -s -o log_cli=true --log-cli-level=DEBUG
+    - cd desire_coap_server
+    - tox -e test,flake8,lint
+  artifacts:
+    when: always
+    reports:
+        junit: ./desire_coap_server/test-report.xml
+    paths:
+        - ./desire_coap_server/test-report.xml
+    expire_in: 4 week

@@ -2,20 +2,17 @@ version: "3.8"
 services:
   # Coap server service
   coap_srv:
-    profiles: ["coaps-srv"]
-    build:
-      context: ../desire_coap_server
-    image: coap_srv:1.0.0
-    container_name: coap_srv
+    image: ${DOCKER_REGISTRY}/desire-coap-server:latest
+    container_name: coap-server
     depends_on:
       - telegraf
     restart: always
     tty: true
     environment:
+      - COAP_HOST
+      - COAP_PORT
+      - EVENT_LOG
       - PROV_NODES
-      - CREDENTIALS_FOLDER_PATH
-      - USE_EDHOC
-    command: --node-uid ${PROV_NODES} --event-log http://telegraf:8080/telegraf ${USE_EDHOC} --host 0.0.0.0 --port 5683
     ports:
       - 5683:5683/udp
     volumes:
@@ -62,7 +59,6 @@ services:
       - ./volumes/influxdb/config:/etc/influxdb2
       - ./volumes/influxdb/scripts:/docker-entrypoint-initdb.d
 
-  
   # Dashboard
   grafana:
     image: grafana/grafana:8.1.5
