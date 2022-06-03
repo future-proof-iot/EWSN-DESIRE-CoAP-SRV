@@ -19,13 +19,12 @@ services:
       - COAP_PORT
       - EVENT_LOG
       - PROV_NODES
-    ports:
-      - 5683:5683/udp
     volumes:
       - credentials:/root/.pepper
     logging: *default-logging
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    network_mode: "host"
 
 volumes:
   credentials:
