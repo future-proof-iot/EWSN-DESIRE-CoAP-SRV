@@ -1,8 +1,17 @@
 version: "3.8"
+
+x-logging:
+  &default-logging
+  driver: "json-file"
+  options:
+    max-file: "5"
+    max-size: "10m"
+
 services:
   # Coap server service
   coap_srv:
     image: ${DOCKER_REGISTRY}/desire-coap-server:latest
+    profiles: ["coaps-srv"]
     container_name: coap-server
     depends_on:
       - telegraf
@@ -13,12 +22,12 @@ services:
       - COAP_PORT
       - EVENT_LOG
       - PROV_NODES
-    ports:
-      - 5683:5683/udp
+    #ports:
+    #  - 5683:5683/udp
     volumes:
-      - type: bind
-        source: ${CREDENTIALS_FOLDER_PATH}
-        target: /root/.pepper
+      - credentials:/root/.pepper
+    logging: *default-logging
+    network_mode: "host"
 
   # Agent for collecting data
   telegraf:
@@ -32,14 +41,15 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./volumes/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
-      - ./volumes/telegraf/metrics.out:/tmp/telegraf/metrics.out
+      - ./volumes/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+      - ./volumes/telegraf/log:/tmp/telegraf/log/
+    logging: *default-logging
 
   # Database
   influxdb:
     image: influxdb:2.0.8
     container_name: influxdb
-    user: "${UUID}:${GID}"
+    user: "${UID}:${GID}"
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
@@ -55,9 +65,10 @@ services:
       - "8086:8086"
     restart: always
     volumes:
-      - ./volumes/influxdb/data:/var/lib/influxdb2
-      - ./volumes/influxdb/config:/etc/influxdb2
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
       - ./volumes/influxdb/scripts:/docker-entrypoint-initdb.d
+    logging: *default-logging
 
   # Dashboard
   grafana:
@@ -65,7 +76,7 @@ services:
     container_name: grafana
     depends_on:
       - influxdb
-    user: "${UUID}:${GID}"
+    user: "${UID}:${GID}"
     restart: always
     environment:
       - GF_SECURITY_ADMIN_USER=admin
@@ -77,4 +88,24 @@ services:
     volumes:
       - ./volumes/grafana/data:/var/lib/grafana
       - ./volumes/grafana/config/provisioning/:/usr/share/grafana/conf/provisioning
+    logging: *default-logging
 
+volumes:
+  credentials:
+      driver: local
+      driver_opts:
+        type: "local"
+        o: bind,uid=${UID},gid=${GID}
+        device: ${CREDENTIALS_FOLDER_PATH}
+  influxdb-data:
+      driver: local
+      driver_opts:
+        type: "local"
+        o: bind,uid=${UID},gid=${GID}
+        device: ${PWD}/volumes/influxdb/data
+  influxdb-config:
+      driver: local
+      driver_opts:
+        type: "local"
+        o: bind,uid=${UID},gid=${GID}
+        device: ${PWD}/volumes/influxdb/config

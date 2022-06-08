@@ -1,28 +1,25 @@
 # Handy makefile as reminder of docker/docker-compose ops
-DOCKER_COMPOSE ?= UUID=$(shell id -u) GID=$(shell id -g) PROV_NODES="${PROV_NODES}" CREDENTIALS_FOLDER_PATH=${CREDENTIALS_FOLDER_PATH} USE_EDHOC=${USE_EDHOC} docker-compose
+DOCKER_COMPOSE ?= UID=$(shell id -u) GID=$(shell id -g) PROV_NODES="${PROV_NODES}" CREDENTIALS_FOLDER_PATH=${CREDENTIALS_FOLDER_PATH} USE_EDHOC=${USE_EDHOC} docker-compose
 THIS_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 COAP_SRV_PATH = ${THIS_DIR}/../desire_coap_server
 
 PROV_NODES ?= DWE549 DWDB44 DWFF6E
 CREDENTIALS_FOLDER_PATH ?= "${THIS_DIR}/volumes/coap_srv/pepper_edhoc_creds"
 
-COAP_SERVER_PROFILE=coaps-srv 
+COAP_SERVER_PROFILE=coaps-srv
 
 build:
 	@echo 'Building and pulling images'
 	${DOCKER_COMPOSE} pull
-	COMPOSE_PROFILES=${COAP_SERVER_PROFILE} ${DOCKER_COMPOSE} build 
+	COMPOSE_PROFILES=${COAP_SERVER_PROFILE} ${DOCKER_COMPOSE} build
 
 up:
 	@echo 'Powering up the containers'
-	echo '' > volumes/telegraf/metrics.out
 	${DOCKER_COMPOSE} up -d
-
 
 down:
 	@echo 'Powering down the containers'
 	${DOCKER_COMPOSE} down --volumes
-	rm -f volumes/telegraf/metrics.out
 
 status:
 	@echo 'Docker compose status:'

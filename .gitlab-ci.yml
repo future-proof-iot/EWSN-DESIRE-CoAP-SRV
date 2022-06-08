@@ -63,7 +63,7 @@ black:
 tox-test:
   tags:
     - ci.inria.fr
-    - medium
+    - large
   stage: test
   script:
     - cd desire_coap_server

@@ -1,0 +1,35 @@
+version: "3.8"
+
+x-logging:
+  &default-logging
+  driver: "json-file"
+  options:
+    max-file: "5"
+    max-size: "10m"
+
+services:
+  # Coap server service
+  coap_srv:
+    image: ${DOCKER_REGISTRY}/desire-coap-server:latest
+    container_name: coap-server
+    restart: always
+    tty: true
+    environment:
+      - COAP_HOST
+      - COAP_PORT
+      - EVENT_LOG
+      - PROV_NODES
+    volumes:
+      - credentials:/root/.pepper
+    logging: *default-logging
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    network_mode: "host"
+
+volumes:
+  credentials:
+      driver: local
+      driver_opts:
+        type: "local"
+        o: bind,uid=${UID},gid=${GID}
+        device: ${CREDENTIALS_FOLDER_PATH}
