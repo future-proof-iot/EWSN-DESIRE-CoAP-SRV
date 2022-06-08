@@ -11,7 +11,7 @@ services:
   # Coap server service
   coap_srv:
     image: ${DOCKER_REGISTRY}/desire-coap-server:latest
-    profiles: ["coap-server"]
+    profiles: ["coaps-srv"]
     container_name: coap-server
     depends_on:
       - telegraf
@@ -49,7 +49,7 @@ services:
   influxdb:
     image: influxdb:2.0.8
     container_name: influxdb
-    user: "${UUID}:${GID}"
+    user: "${UID}:${GID}"
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
@@ -76,7 +76,7 @@ services:
     container_name: grafana
     depends_on:
       - influxdb
-    user: "${UUID}:${GID}"
+    user: "${UID}:${GID}"
     restart: always
     environment:
       - GF_SECURITY_ADMIN_USER=admin
@@ -95,17 +95,17 @@ volumes:
       driver: local
       driver_opts:
         type: "local"
-        o: bind,uid=${UUID},gid=${GID}
+        o: bind,uid=${UID},gid=${GID}
         device: ${CREDENTIALS_FOLDER_PATH}
   influxdb-data:
       driver: local
       driver_opts:
         type: "local"
-        o: bind,uid=${UUID},gid=${GID}
+        o: bind,uid=${UID},gid=${GID}
         device: ${PWD}/volumes/influxdb/data
   influxdb-config:
       driver: local
       driver_opts:
         type: "local"
-        o: bind,uid=${UUID},gid=${GID}
+        o: bind,uid=${UID},gid=${GID}
         device: ${PWD}/volumes/influxdb/config

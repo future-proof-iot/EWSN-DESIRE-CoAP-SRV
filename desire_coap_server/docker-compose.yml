@@ -31,5 +31,5 @@ volumes:
       driver: local
       driver_opts:
         type: "local"
-        o: bind,uid=${UUID},gid=${GID}
+        o: bind,uid=${UID},gid=${GID}
         device: ${CREDENTIALS_FOLDER_PATH}
