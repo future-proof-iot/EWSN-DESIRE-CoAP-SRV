@@ -48,7 +48,6 @@ class RqHandlerBase(ABC):
 
 # Coap resources
 class TimeOfDayResource(resource.Resource):
-    # pylint: disable=no-self-use
     async def render_get(self, request):
         rsp = aiocoap.Message(mtype=request.mtype)
         content_format = request.opt.content_format
